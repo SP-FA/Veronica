@@ -18,6 +18,8 @@
 #
 # 4. 远程监控电脑状态：
 #   - 获取 CPU GPU 占用、温度等参数
+#       - 在紧急情况下（占用率 100%，温度过高）
+#       - 手动获取
 #
 
 import setproctitle
@@ -29,25 +31,33 @@ from pyEmail import Mail
 from threading import Timer
 
 
-# 创建 yaml 文件，将必要信息写入
+TIME_INTERVAL = 360
+
+TIMER_ON = 1
+TIMER_OFF = 0
+
+
 #
 # 当前 yaml 文件结构：
-# - title : str
-# - message : str
-# - imgPaths
-#   - path : str
-#   - name : str
-# - filePaths
-#   - path : str
-#   - name : str
-# - epoch
-#   - now : int 当前迭代数量
-#   - total : int 总迭代数
-# - timer : int 是否启用定时，0 为不启用，1 为启用
+# title : str
+# message : str
+# imgPaths:
+#   -
+#     path : str
+#     name : str
+# filePaths:
+#   -
+#     path : str
+#     name : str
+# epoch:
+#   now : int 当前迭代数量
+#   total : int 总迭代数
+# timer: int 是否启用定时，0 为不启用，1 为启用
+# mailbox: str
 #
-def write_yaml(title, msg=None, imgPaths=None, filePaths=None, epoch=None, timer=0):
+def write_yaml(title, msg=None, imgPaths=None, filePaths=None, epoch=None, timer=TIMER_OFF, mailbox=""):
     #
-    # imgPaths = {"path": path, "name": file name}
+    # imgPaths = [{"path": path, "name": file name}]
     # epoch = {"now": , "total": }
     #
     path = os.getcwd() + "/" + title + ".yaml"
@@ -69,6 +79,9 @@ def write_yaml(title, msg=None, imgPaths=None, filePaths=None, epoch=None, timer
             timer = 0
         dct.update({"timer": timer})
 
+        if mailbox != "":
+            dct.update({"mailbox": mailbox})
+
         yaml.dump(dct, stream=f, allow_unicode=True)
 
 
@@ -86,7 +99,7 @@ def change_yaml(path, dct, node: str):
 
 
 def _gen_fin_msg(conf):
-    msg = "[FIN][4070ti 计算节点] 任务 %s 已经完成\n" % (conf["title"])
+    msg = "[Due][4070ti 计算节点] 任务 %s 已经完成\n" % (conf["title"])
     msg = msg + conf["message"] + "\n"
     if conf["epoch"] is not None:
         if conf["epoch"]["now"] is not None:
@@ -97,7 +110,7 @@ def _gen_fin_msg(conf):
 
 
 def _gen_tmr_msg(conf):
-    msg = "[REMIND][4070ti 计算节点] 任务 %s 定时汇报\n" % (conf["title"])
+    msg = "[Reminder][4070ti 计算节点] 任务 %s 定时汇报\n" % (conf["title"])
     msg = msg + conf["message"] + "\n"
     if conf["epoch"] is not None:
         if conf["epoch"]["now"] is not None:
@@ -108,19 +121,21 @@ def _gen_tmr_msg(conf):
 
 
 class SetProcess:
-    #
-    # 主要作用是往配置文件里写东西
-    # TODO(SPFA): 添加收件人
-    #
     def __init__(self, title):
         self.title = os.getlogin() + "@" + title
         setproctitle.setproctitle(self.title)
-        os.system("python /home/yzc/Veronica/startSuper.py")
 
-    def configer(self, msg=None, imgPaths: List = None, filePaths: List = None, timer=0):
+        pids = psutil.pids()
+        for pid in pids:
+            proc = psutil.Process(pid)
+            if "super@super" in proc.name():
+                return
+        os.system("bash /home/yzc/Veronica/startSuper.sh")
+
+    def configer(self, msg=None, imgPaths: List = None, filePaths: List = None, timer=TIMER_OFF, mailbox=""):
         #
         # @ imgPath: 存放 img 文件的文件夹所在的路径 / img 路径
-        # @ imgPath: 存放 file 文件的文件夹所在的路径 / file 路径
+        # @ filePath: 存放 file 文件的文件夹所在的路径 / file 路径
         #
         # Todo: 检查每个路径，将文件夹下的所需文件路径写入 yaml
         #
@@ -134,7 +149,7 @@ class SetProcess:
             path = os.path.abspath(path)
             filePath["path"] = path
 
-        write_yaml(self.title, msg, imgPaths, filePaths, timer=timer)
+        write_yaml(self.title, msg, imgPaths, filePaths, timer, mailbox)
 
     def set_epoch(self, now, total):
         e = {"now": now, "total": total}
@@ -146,7 +161,6 @@ class SetProcess:
 
 
 class Supervisor:
-    # 监控程序
     def __init__(self):
         self.user = os.getlogin()
         self.procL = []
@@ -198,15 +212,21 @@ class Supervisor:
                 path = proc["cfg"]
 
             conf = read_yaml(path)
+            rcv = self.receivers.copy()
+            try:
+                rcv.append(conf["mailbox"])
+            except KeyError:
+                pass
+
             title = "维罗妮卡工作报告：关于 " + conf["title"]
 
             msg = ""
-            if isTimer == 1 and conf["timer"] == 1:
+            if isTimer == TIMER_ON and conf["timer"] == TIMER_ON:
                 msg = _gen_tmr_msg(conf)
-            elif isTimer == 0:
+            elif isTimer == TIMER_OFF:
                 msg = _gen_fin_msg(conf)
 
-            self.email.create_mail(title, self.sender, self.receivers)
+            self.email.create_mail(title, self.sender, rcv)
             self.email.add_msg(title, msg)
             self.email.add_img(title, conf["imgPaths"])
             self.email.add_file(title, conf["filePaths"])
@@ -215,15 +235,15 @@ class Supervisor:
     def _timer_func(self, num):
         procs = self._get_fin_process()
         if procs:
-            self._send_mails(procs, 0)
+            self._send_mails(procs, TIMER_OFF)
         if num > 1:
             num -= 1
         else:
-            num = 360
-            self._send_mails(self._find_process(), 1)
+            num = TIME_INTERVAL
+            self._send_mails(self._find_process(), TIMER_ON)
         timer = Timer(10, self._timer_func, (num,))
         timer.start()
 
     def supervise(self):
-        timer = Timer(10, self._timer_func, (360,))
+        timer = Timer(10, self._timer_func, (TIME_INTERVAL,))
         timer.start()

@@ -12,12 +12,12 @@ class MailDraft:
         self.receivers = receivers  # [""]
         
         #
-        # @ imgDct: {'path': file path, 'name': file name}
-        # @ fileDct: {'path': , 'name': }
+        # @ imgLst: [{'path': file path, 'name': file name}]
+        # @ fileLst: [{'path': , 'name': }]
         #
         self.msg = ""
-        self.imgDct = []
-        self.fileDct = []
+        self.imgLst = []
+        self.fileLst = []
 
     def _send_draft(self, smtpObj):
         message = MIMEMultipart()
@@ -28,26 +28,28 @@ class MailDraft:
         content = MIMEText(self.msg, 'plain', 'utf-8')
         message.attach(content)
 
-        for i in self.imgDct:
+        for i in self.imgLst:
             message.attach(self._make_img(i['path'], i['name']))
 
-        for i in self.fileDct:
+        for i in self.fileLst:
             message.attach(self._make_file(i['path'], i['name']))
 
         try:
             smtpObj.sendmail(self.sender, self.receivers, message.as_string())
-            print('message is sent successfully!')
+            print('\n==================================\n'
+                  'message is sent successfully!'
+                  '\n==================================\n')
         except smtplib.SMTPException as e:
             print('Error: ', e)
 
     def add_msg(self, newMsg):
         self.msg = self.msg + newMsg
 
-    def add_img(self, newImgDct: List):
-        self.imgDct.extend(newImgDct)
+    def add_img(self, newImgLst: List):
+        self.imgLst.extend(newImgLst)
 
-    def add_file(self, newFileDct: List):
-        self.fileDct.extend(newFileDct)
+    def add_file(self, newFileLst: List):
+        self.fileLst.extend(newFileLst)
 
     def _make_img(self, imgPath, imgName):
         with open(imgPath, 'rb') as fp:
@@ -84,7 +86,6 @@ class Mail:
                 # 连接到服务器
                 self.smtpObj.connect(host, 25)
             self.smtpObj.login(userName, pwd)
-            # print('e-mail account log in successful!')
         except smtplib.SMTPException as e:
             print('Error: ', e)
 
@@ -133,26 +134,3 @@ class Mail:
     def logout(self):
         self.smtpObj.quit()
 
-
-if __name__ == '__main__':
-    # 设置服务器所需信息
-    # 邮箱服务器地址
-    mail_host = 'smtp.qq.com'
-    # 用户名
-    mail_user = '2053232384'
-    # 密码(部分邮箱为授权码) 
-    mail_pass = 'syktappnjddlcadd'
-
-    title = "test"
-    sender = '2053232384@qq.com'
-    receivers = ['2997839760@qq.com']
-    message = "ztrmyxdd"
-    #imagePath = "./pite.png"
-    #filePath = "./test.csv"
-
-    email = Mail(mail_host, mail_user, mail_pass)
-    email.create_mail(title, sender, receivers, message)
-    # email.add_file(filePath, "test.csv")
-    # email.add_img(imagePath, "piteCry.png")
-    email.list_drafts()
-    email.send_mail('test')

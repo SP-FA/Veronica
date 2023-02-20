@@ -10,5 +10,5 @@ imgPaths:
 - name: lty
   path: /home/yzc/Veronica/IMG_2005(20230214-233503).JPEG
 message: this is a test message
-timer: 1
+timer: 0
 title: yzc@test

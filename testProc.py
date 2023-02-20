@@ -15,7 +15,7 @@ def preSet():
 def processing():
     for i in range(0, 50):
         print(i)
-        proc.setEpoch(i, 50)
+        proc.set_epoch(i, 50)
         time.sleep(1)
 
 
