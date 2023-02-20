@@ -47,7 +47,7 @@ from threading import Timer
 #
 def write_yaml(title, msg=None, imgPaths=None, filePaths=None, epoch=None, timer=0):
     #
-    # imgPaths = {"path": path, "name": file namme}
+    # imgPaths = {"path": path, "name": file name}
     # epoch = {"now": , "total": }
     #
     path = os.getcwd() + "/" + title + ".yaml"
@@ -110,7 +110,7 @@ def _gen_tmr_msg(conf):
 class SetProcess:
     #
     # 主要作用是往配置文件里写东西
-    # Todo: 添加收件人
+    # TODO(SPFA): 添加收件人
     #
     def __init__(self, title):
         self.title = os.getlogin() + "@" + title
@@ -136,12 +136,12 @@ class SetProcess:
 
         write_yaml(self.title, msg, imgPaths, filePaths, timer=timer)
 
-    def setEpoch(self, now, total):
+    def set_epoch(self, now, total):
         e = {"now": now, "total": total}
         change_yaml(os.getcwd() + "/" + self.title + ".yaml", e, "epoch")
 
     #
-    # Todo: 允许增加 msg 图片 文件 路径
+    # TODO: 允许增加 msg 图片 文件 路径
     #
 
 
@@ -200,6 +200,7 @@ class Supervisor:
             conf = read_yaml(path)
             title = "维罗妮卡工作报告：关于 " + conf["title"]
 
+            msg = ""
             if isTimer == 1 and conf["timer"] == 1:
                 msg = _gen_tmr_msg(conf)
             elif isTimer == 0:

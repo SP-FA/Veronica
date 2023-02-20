@@ -64,7 +64,7 @@ class MailDraft:
         f['Content-Disposition'] = 'attachment;filename="%s"' % (fName)
         return f
 
-    # Todo:
+    # TODO:
     def _check_path(self, path):
         #
         # 检查路径是 dir 还是 file (file / image)
