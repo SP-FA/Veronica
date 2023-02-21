@@ -37,8 +37,7 @@ class MailDraft:
         try:
             smtpObj.sendmail(self.sender, self.receivers, message.as_string())
             print('\n==================================\n'
-                  'message is sent successfully!'
-                  '\n==================================\n')
+                  'message is sent successfully!')
         except smtplib.SMTPException as e:
             print('Error: ', e)
 
@@ -106,15 +105,15 @@ class Mail:
         if idx != -1:
             self.mailLst[idx].add_msg(newMsg)
 
-    def add_img(self, title, newImgDct):
+    def add_img(self, title, newImgLst):
         idx = self._find_mail_title(title)
         if idx != -1:
-            self.mailLst[idx].add_img(newImgDct)
+            self.mailLst[idx].add_img(newImgLst)
 
-    def add_file(self, title, newFileDct):
+    def add_file(self, title, newFileLst):
         idx = self._find_mail_title(title)
         if idx != -1:
-            self.mailLst[idx].add_file(newFileDct)
+            self.mailLst[idx].add_file(newFileLst)
 
     def list_drafts(self):
         for i in self.mailLst:

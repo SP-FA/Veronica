@@ -1,4 +1,4 @@
-from processSupervisor import Supervisor
+from VeroSuper import Supervisor
 import setproctitle
 
 
