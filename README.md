@@ -34,7 +34,8 @@ proc = SetProcess("test")
 msg = "this is a test message"
 imgPaths = [{"name": "testPic1", "path": "test1.png"}, {"name": "testPic2", "path": "test2.JPEG"}]
 filePaths = [{"name": "testFil", "path": "testFil.txt"}]
-proc.configer(msg, imgPaths, filePaths, timer=1)
+mailbox = "****@**.com"
+proc.configer(msg, imgPaths, filePaths, timer=1, mailbox=mailbox)
 ```
 
 `timer` 参数表示是否启用定时发送邮件，1 为启用，0 为不启用
