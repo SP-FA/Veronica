@@ -67,7 +67,7 @@ filePaths:
 epoch:
     now : int
     total : int
-timer: int
+timer: int 是否启用定时，0 为不启用，1 为启用
 mailbox: str
 ```
 

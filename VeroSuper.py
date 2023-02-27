@@ -14,24 +14,6 @@ TIMER_OFF = 0
 PROC_REGULAR = 0
 PROC_FINISH = 1
 
-#
-# 当前 yaml 文件结构：
-# title : str
-# message : str
-# imgPaths:
-#   -
-#     path : str
-#     name : str
-# filePaths:
-#   -
-#     path : str
-#     name : str
-# epoch:
-#   now : int 当前迭代数量
-#   total : int 总迭代数
-# timer: int 是否启用定时，0 为不启用，1 为启用
-# mailbox: str
-#
 
 def read_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
