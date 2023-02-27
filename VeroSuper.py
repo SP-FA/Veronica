@@ -5,7 +5,8 @@ from pyEmail import Mail
 from threading import Timer
 
 
-TIME_INTERVAL = 360
+TIME_INTERVAL = 360 # 要改成可变的，不能写死
+                    # 必要的话可以改成每个程序单独设置，监视器使用计数器来统计时间
 
 TIMER_ON = 1
 TIMER_OFF = 0
