@@ -1,5 +1,4 @@
 import psutil
-from typing import *
 import yaml
 import os
 from pyEmail import Mail
