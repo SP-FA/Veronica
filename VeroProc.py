@@ -8,7 +8,7 @@ import psutil
 TIMER_OFF = 0
 
 
-def write_yaml(title, msg=None, imgPaths=None, filePaths=None, timer=TIMER_OFF, mailbox=""):
+def wt_yaml(title, msg=None, imgPaths=None, filePaths=None, timer=TIMER_OFF, mailbox=""):
     path = os.getcwd() + "/" + title + ".yaml"
     with open(path, 'w', encoding='utf-8') as f:
         dct = {"title": title}
@@ -23,21 +23,21 @@ def write_yaml(title, msg=None, imgPaths=None, filePaths=None, timer=TIMER_OFF, 
         yaml.dump(dct, stream=f, allow_unicode=True)
 
 
-def read_yaml(path):
+def rd_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
         dct = yaml.load(f.read(), Loader=yaml.FullLoader)
     return dct
 
 
-def change_yaml(path, dct, node):
-    config = read_yaml(path)
+def ch_yaml(path, dct, node):
+    config = rd_yaml(path)
     config[node] = dct
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(config, stream=f, allow_unicode=True)
 
 
-def add_yaml(path, dct, node):
-    config = read_yaml(path)
+def ad_yaml(path, dct, node):
+    config = rd_yaml(path)
     config[node].extend([dct])
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(config, stream=f, allow_unicode=True)
@@ -74,16 +74,16 @@ class SetProcess:
             path = os.path.abspath(path)
             filePath["path"] = path
 
-        write_yaml(self.title, msg, imgPaths, filePaths, timer, mailbox)
+        wt_yaml(self.title, msg, imgPaths, filePaths, timer, mailbox)
 
     def set_epoch(self, now, total):
         e = {"now": now, "total": total}
-        change_yaml(self.ypath, e, "epoch")
+        ch_yaml(self.ypath, e, "epoch")
 
     def change_node(self, dct, node):
         # TODO: 验证 node 是否允许 change
-        change_yaml(self.ypath, dct, node)
+        ch_yaml(self.ypath, dct, node)
 
     def add_node(self, dct, node):
         # TODO: 验证 node 是否允许 add
-        add_yaml(self.ypath, dct, node)
+        ad_yaml(self.ypath, dct, node)

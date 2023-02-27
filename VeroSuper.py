@@ -15,7 +15,7 @@ PROC_REGULAR = 0
 PROC_FINISH = 1
 
 
-def read_yaml(path):
+def rd_yaml(path):
     with open(path, 'r', encoding='utf-8') as f:
         dct = yaml.load(f.read(), Loader=yaml.FullLoader)
     return dct
@@ -87,7 +87,7 @@ class Supervisor:
             except psutil.NoSuchProcess:
                 path = proc["cfg"]
 
-            conf = read_yaml(path)
+            conf = rd_yaml(path)
             rcv = self.receivers.copy()
             try:
                 rcv.append(conf["mailbox"])
