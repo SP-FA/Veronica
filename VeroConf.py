@@ -32,6 +32,3 @@ def ad_yaml(path, dct, node):
     with open(path, 'w', encoding='utf-8') as f:
         yaml.dump(config, stream=f, allow_unicode=True)
 
-
-def shit():
-    ...

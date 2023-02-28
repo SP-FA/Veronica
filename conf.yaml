@@ -1,0 +1,10 @@
+mail_host: "smtp.qq.com"
+
+mail_user: "2053232384"
+
+mail_pass: "syktappnjddlcadd"
+
+sender: "2053232384@qq.com"
+
+receiver:
+  - mail: "2997839760@qq.com"

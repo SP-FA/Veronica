@@ -56,17 +56,17 @@ for cur_epoch in range(1, total_epoch+1):
 yaml 配置文件的结构如下：
 
 ```
-title : str
-message : str
+title: str
+message: str
 imgPaths:
-    - path : str
-      name : str
+    - path: str
+      name: str
 filePaths:
-    - path : str
-      name : str
+    - path: str
+      name: str
 epoch:
-    now : int
-    total : int
+    now: int
+    total: int
 timer: int 是否启用定时，0 为不启用，1 为启用
 mailbox: str
 ```

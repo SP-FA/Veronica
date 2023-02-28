@@ -36,13 +36,22 @@ class Supervisor:
         self.user = os.getlogin()
         self.procL = []
 
-        mail_host = 'smtp.qq.com'
-        mail_user = '2053232384'
-        mail_pass = 'syktappnjddlcadd'
-        self.sender = '2053232384@qq.com'
-        # receivers 需要设置，用户提前对用户名绑定邮箱
-        self.receivers = ['2997839760@qq.com']
-        self.email = Mail(mail_host, mail_user, mail_pass)
+        ##############################
+        # TODO: 需要测试
+
+        conf = rd_yaml("conf.yaml")
+        self.sender = conf["sender"]
+        self.receivers = [conf["receiver"]]
+        self.email = Mail(conf["mail_host"], conf["mail_user"], conf["mail_pass"])
+
+        # mail_host = 'smtp.qq.com'
+        # mail_user = '2053232384'
+        # mail_pass = 'syktappnjddlcadd'
+        # self.sender = '2053232384@qq.com'
+        # # receivers 需要设置，用户提前对用户名绑定邮箱
+        # self.receivers = ['2997839760@qq.com']
+
+        ##############################
 
     def _find_process(self):
         #
