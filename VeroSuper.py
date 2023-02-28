@@ -15,12 +15,6 @@ PROC_REGULAR = 0
 PROC_FINISH = 1
 
 
-def rd_yaml(path):
-    with open(path, 'r', encoding='utf-8') as f:
-        dct = yaml.load(f.read(), Loader=yaml.FullLoader)
-    return dct
-
-
 def _gen_msg(conf, status):
     if status == PROC_FINISH:
         title = "[Fin][4070ti 计算节点] 任务 %s 已经完成" % (conf["title"])
