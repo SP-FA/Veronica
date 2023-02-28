@@ -26,7 +26,7 @@ class SetProcess:
         # @ imgPath: 存放 img 文件的文件夹所在的路径 / img 路径
         # @ filePath: 存放 file 文件的文件夹所在的路径 / file 路径
         #
-        # Todo: 检查每个路径，将文件夹下的所需文件路径写入 yaml
+        # TODO: 检查每个路径，将文件夹下的所需文件路径写入 yaml
         #
         for imgPath in imgPaths:
             path = imgPath["path"]
