@@ -3,6 +3,7 @@ import yaml
 import os
 from pyEmail import Mail
 from threading import Timer
+from VeroConf import rd_yaml
 
 
 TIME_INTERVAL = 360 # 要改成可变的，不能写死

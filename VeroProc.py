@@ -2,6 +2,7 @@ import yaml
 import os
 import setproctitle
 import psutil
+from VeroConf import wt_yaml, ch_yaml, ad_yaml
 
 
 TIMER_OFF = 0
@@ -51,3 +52,5 @@ class SetProcess:
     def add_node(self, dct, node):
         # TODO: 验证 node 是否允许 add
         ad_yaml(self.ypath, dct, node)
+
+
