@@ -25,6 +25,9 @@ class MailDraft:
         message['From'] = self.sender
         message['To'] = ','.join(self.receivers)
 
+        # dghfghj
+
+
         content = MIMEText(self.msg, 'plain', 'utf-8')
         message.attach(content)
 
