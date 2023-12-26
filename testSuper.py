@@ -1,7 +1,7 @@
 from processSupervisor import Supervisor
 import psutil
 import pynvml
-from pyEmail import Mail
+from vero_email.py_email import Mail
 
 
 def runSupervisor():

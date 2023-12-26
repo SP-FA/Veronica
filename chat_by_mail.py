@@ -1,6 +1,6 @@
 import time
 
-from pyEmail import MailBox, MailDraft
+from vero_email.py_email import MailBox, MailDraft
 from chat import ChatModel
 
 

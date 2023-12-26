@@ -1,5 +1,4 @@
 import yaml
-from typing import Dict
 
 
 # def wt_yaml(title, msg=None, imgPaths=None, filePaths=None, timer=TIMER_OFF, mailbox=""):
@@ -41,7 +40,7 @@ class ConfLoader:
         self.params = self._read(path)
 
     @staticmethod
-    def _read(path) -> Dict:
+    def _read(path):
         with open(path, 'r', encoding='utf-8') as f:
             dct = yaml.load(f.read(), Loader=yaml.FullLoader)
         return dct
@@ -55,13 +54,8 @@ class ConfLoader:
             self.params[k] = v
 
     def __str__(self):
-        totalstr = ""
+        info = ""
         for k, v in self.params.items():
-            totalstr = totalstr + f"[PARAM] {k}: {v}\n"
-        return totalstr
+            info = info + f"[PARAM] {k}: {v}\n"
+        return info
 
-
-if __name__ == "__main__":
-    path = "../conf.yaml"
-    conf = ConfLoader(path)
-    print(conf)
