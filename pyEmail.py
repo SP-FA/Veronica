@@ -13,26 +13,23 @@ class MailDraft:
     """ 用于存储 邮件信息 的类
 
     Attributes:
+        IMG_EXT List[str]: 常见的图片格式后缀
+
         title (str): 邮件的主题
         sender (str): 发件人
         receivers (List[str]): 收件人，可以包含多个
         msg (str): 邮件的内容
-        imgLst (List[Dict{'path': str, 'name': str}]): 邮件的图片附件，可以有很多个，每个包括了图片路径和发送时的名字
-        fileLst (List[Dict{'path': str, 'name': str}]): 邮件的文件附件，可以有很多个，每个包括了文件路径和发送时的名字
+        attachments List[str]: 附件的目录
         id (str): 收件箱内邮件的 id
     """
-    def __init__(self, title, sender, receivers):
+    IMG_EXT = ["jpg", "png", "jpeg", "gif"]
+
+    def __init__(self, title, sender, receivers, msg="", attachments=[]):
         self.title = title
         self.sender = sender
         self.receivers = receivers  # [""]
-        
-        #
-        # @ imgLst: [{'path': file path, 'name': file name}]
-        # @ fileLst: [{'path': , 'name': }]
-        #
-        self.msg = ""
-        self.imgLst = []
-        self.fileLst = []
+        self.msg = msg
+        self.attachments = attachments
         self.id = ""
 
     def send_draft(self, smtpObj):
@@ -44,11 +41,10 @@ class MailDraft:
         content = MIMEText(self.msg, 'plain', 'utf-8')
         message.attach(content)
 
-        for i in self.imgLst:
-            message.attach(self._make_img(i['path'], i['name']))
-
-        for i in self.fileLst:
-            message.attach(self._make_file(i['path'], i['name']))
+        for attachment in self.attachments:
+            files = self._check_path(attachment)
+            for file in files:
+                message.attach(file)
 
         try:
             smtpObj.sendmail(self.sender, self.receivers, message.as_string())
@@ -66,28 +62,49 @@ class MailDraft:
     def add_file(self, newFileLst: List):
         self.fileLst.extend(newFileLst)
 
+    def _check_path(self, path) -> List[MIMENonMultipart]:
+        """检查路径是 dir 还是 file (file / image)，如果是 dir 则提取目录下的文件，否则直接提取该文件
+
+        Args:
+            path (str): 文件 / 目录 路径
+
+        Returns:
+            List[MIMENonMultipart]: 一个列表，存放所有提取到的文件
+        """
+        if not os.path.exists(path): return []
+
+        fileList = []
+        if os.path.isdir(path):
+            files = os.listdir(path)
+            for f in files:
+                fl = self._check_path(os.path.join(path, f))
+                fileLst.extend(fl)
+        else:
+            _, name = os.path.split(path)
+            splitName = name.split(".")
+            if splitName[-1].lower() in self.IMG_EXT:
+                file = self._make_img(path, name)
+            else:
+                file = self._make_file(path, name)
+            fileList.append(file)
+        return fileList
+
+    @staticmethod
     def _make_img(self, imgPath, imgName):
         with open(imgPath, 'rb') as fp:
             img = MIMEImage(fp.read())
-        img['Content-Type'] = 'application/octet-stream'
-        img['Content-Disposition'] = 'attachment;filename="%s"' % (imgName)
+            img['Content-Type'] = 'application/octet-stream'
+            img['Content-Disposition'] = f'attachment;filename="{imgName}"'
         return img
 
+    @staticmethod
     def _make_file(self, fPath, fName):
         with open(fPath, 'rb') as fp:
             content = fp.read()
-        f = MIMEText(content, 'plain', 'utf-8')
-        f['Content-Type'] = 'application/octet-stream'
-        f['Content-Disposition'] = 'attachment;filename="%s"' % (fName)
+            f = MIMEText(content, 'plain', 'utf-8')
+            f['Content-Type'] = 'application/octet-stream'
+            f['Content-Disposition'] = f'attachment;filename="{fName}"'
         return f
-
-    # TODO:
-    def _check_path(self, path):
-        #
-        # 检查路径是 dir 还是 file (file / image)
-        # 如果是 dir，则需要将目录下的文件提取并 return
-        #
-        return fileList
 
     def __str__(self):
         return self.isChinese()
