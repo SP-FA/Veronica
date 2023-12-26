@@ -3,5 +3,5 @@
   <component name="Black">
     <option name="sdkName" value="deepplace" />
   </component>
-  <component name="ProjectRootManager" version="2" project-jdk-name="deepplace" project-jdk-type="Python SDK" />
+  <component name="ProjectRootManager" version="2" project-jdk-name="SPFA" project-jdk-type="Python SDK" />
 </project>

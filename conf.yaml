@@ -7,7 +7,7 @@ mail_pass: "syktappnjddlcadd"
 sender: "2053232384@qq.com"
 
 receiver:
-  - mail: "2997839760@qq.com"
+  - "2997839760@qq.com"
 
 ernie_access_token: "24.16af52018cd524ca8fa5d3133dfd6c09.2592000.1705601666.282335-45332416"
 

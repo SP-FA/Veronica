@@ -1,8 +1,7 @@
-import yaml
 import os
 import setproctitle
 import psutil
-from VeroConf import wt_yaml, ch_yaml, ad_yaml
+from utils.configure_util import wt_yaml, ch_yaml, ad_yaml
 
 
 TIMER_OFF = 0

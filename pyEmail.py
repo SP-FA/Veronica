@@ -13,13 +13,13 @@ class MailDraft:
     """ 用于存储 邮件信息 的类
 
     Attributes:
-        IMG_EXT List[str]: 常见的图片格式后缀
+        IMG_EXT (List[str]): 常见的图片格式后缀
 
         title (str): 邮件的主题
         sender (str): 发件人
         receivers (List[str]): 收件人，可以包含多个
         msg (str): 邮件的内容
-        attachments List[str]: 附件的目录
+        attachments (List[str]): 附件的目录
         id (str): 收件箱内邮件的 id
     """
     IMG_EXT = ["jpg", "png", "jpeg", "gif"]
