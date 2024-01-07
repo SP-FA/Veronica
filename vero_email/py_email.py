@@ -8,7 +8,7 @@ from email.mime.image import MIMEImage
 from email.header import decode_header
 from tqdm import tqdm
 
-from utils.configure_util import ConfLoader
+from vero_visualizer.text_visualizer import TextVisualizer
 
 
 class MailDraft:
@@ -37,6 +37,8 @@ class MailDraft:
         self.msg = msg
         self.attachments = attachments
         self.id = ""
+
+        self.visual = TextVisualizer(self.LINE_LENGTH, "  |\n|  ")
 
     def send_draft(self, smtpObj):
         message = MIMEMultipart()
@@ -110,15 +112,9 @@ class MailDraft:
         return f
 
     def __str__(self):
-        title = self._fill_line("Subject: " + self.title)
-        sender = self._fill_line("Sender : " + self.sender)
-
-        msg = self.msg.replace("\r", "")
-        sections = msg.split("\n")
-        sectionLst = []
-        for section in sections:
-            sectionLst.append(self._sep_line(section))
-        content = "  |\n|  ".join(sectionLst)
+        title = self.visual("Subject: " + self.title)
+        sender = self.visual("Sender : " + self.sender)
+        content = self.visual(self.msg)
         return (f"=============================Draft=============================\n"
                 f"|                                                             |\n"
                 f"|  {title}  |\n"
@@ -127,113 +123,6 @@ class MailDraft:
                 f"|                                                             |\n"
                 f"|  {content}  |\n"
                 f"===============================================================")
-
-
-        # return self.isChinese()
-        # m = len("=========================================================")
-        # msgLst = self.msg.split("\n")
-        # final_title = "Subject: " + self.title
-        # final_sender = "Sender : " + self.sender
-        # final_msg = []
-        # for msg in msgLst:
-        #     section = msg.split(" ")
-        #     temp_msg = ""
-        #     for word in section:
-        #         if len(temp_msg + word + " ") <= m:
-        #             temp_msg = temp_msg + word + " "
-        #         else:
-        #             final_msg.append(temp_msg + " " * (m - len(temp_msg)))
-        #             temp_msg = word
-        #     final_msg.append(temp_msg + " " * (m - len(temp_msg)))
-        #     final_msg.append(" " * m)
-        # final_title_str = final_title + " " * (m - len(final_title))
-        # final_sender_str = final_sender + " " * (m - len(final_sender))
-        # final_msg_str = "  |\n|  ".join(final_msg)
-        # final_msg_str += "  |\n==============================================================="
-        #
-        # return (f"=============================Draft=============================\n"
-        #         f"|                                                             |\n"
-        #         f"|  {final_title_str}  |\n"
-        #         f"|  {final_sender_str}  |\n"
-        #         f"|  ---------------------------------------------------------  |\n"
-        #         f"|                                                             |\n"
-        #         f"|  {final_msg_str}")
-
-    def isChinese(self):
-        m = len("=========================================================")
-        msg = self.msg.replace("\r", "")
-        msgLst = msg.split("\n")
-        final_title = "Subject: " + self.title
-        final_sender = "Sender : " + self.sender
-        final_msg = []
-        for msg in msgLst:
-            section = [char for char in msg]
-            temp_msg = ""
-            for word in section:
-                if len(temp_msg) + len(word) * 2 + 1 <= m:
-                    temp_msg = temp_msg + word
-                else:
-                    final_msg.append(temp_msg + " " * ((m - len(temp_msg)) // 2))
-                    temp_msg = word
-            final_msg.append(temp_msg + " " * ((m - len(temp_msg)) // 2))
-            final_msg.append(" " * m)
-        final_title_str = final_title + " " * ((m - len(final_title)) // 2)
-        final_sender_str = final_sender + " " * ((m - len(final_sender)) // 2)
-        final_msg_str = "  |\n|  ".join(final_msg)
-        final_msg_str += "  |\n==============================================================="
-
-        return (f"=============================Draft=============================\n"
-                f"|                                                             |\n"
-                f"|  {final_title_str}  |\n"
-                f"|  {final_sender_str}  |\n"
-                f"|  ---------------------------------------------------------  |\n"
-                f"|                                                             |\n"
-                f"|  {final_msg_str}")
-
-    def _sep_line(self, section):
-        lineLst = []
-        oneLine = ""
-        lenth = 0
-        for char in section:
-            lenth += self._cal_strlen(char)
-            if lenth > self.LINE_LENGTH:
-                lineLst.append(self._fill_line(oneLine))
-                lenth = self._cal_strlen(char)
-                oneLine = char
-            else:
-                oneLine = oneLine + char
-        lineLst.append(self._fill_line(oneLine))
-        return "  |\n|  ".join(lineLst)
-
-    def _fill_line(self, sentence):
-        """将不足一行长度的字符串补上空格
-
-        Args:
-            sentence (str): 一个中英混合的字符串
-
-        Returns:
-            str: 一个完整的行
-        """
-        m = self._cal_strlen(sentence)
-        return sentence + " " * (self.LINE_LENGTH - int(m))
-
-    @staticmethod
-    def _cal_strlen(sentence):
-        """计算一个中英混合字符串的长度
-
-        Args:
-            sentence (str): 一个中英混合的字符串
-
-        Returns:
-            int: 长度
-        """
-        length = 0
-        for char in sentence:
-            if '\u4e00' <= char <= '\u9fff':
-                length += 1.666666
-            else:
-                length += 1
-        return length
 
 
 class MailBox:
@@ -248,7 +137,6 @@ class MailBox:
         unreadMailIDLst (List[str]): 未读邮件列表
     """
     def __init__(self, params):
-        params = params.params
         host = params["mail_host"]
         username = params["mail_user"]
         pwd = params["mail_pass"]
@@ -301,7 +189,8 @@ class MailBox:
             i.send_draft(self.smtpObj)
         self.draftLst = []
 
-    def _byte2str(self, data):
+    @staticmethod
+    def _byte2str(data):
         if isinstance(data, bytes):
             try:
                 data = data.decode()
@@ -337,8 +226,7 @@ class MailBox:
                         # 获取文本内容
                         if "text/plain" in content_type and "attachment" not in content_disposition:
                             message = part.get_payload(decode=True)
-                        # TODO:
-                        # 获取其他附件内容
+                        # TODO: 获取其他附件内容
                 else:
                     # 非多部分邮件（纯文本邮件）
                     message = emailMsg.get_payload(decode=True)
@@ -359,26 +247,3 @@ class MailBox:
     def logout(self):
         self.smtpObj.quit()
         self.imapObj.logout()
-
-
-if __name__ == "__main__":
-    path = "../conf.yaml"
-    params = ConfLoader(path)
-    sender = params.params["sender"]
-    receiver = params.params["receiver"]
-
-    new_draft = MailDraft(title="test", sender=sender, receivers=receiver)
-    mailbox = MailBox(params)
-    # new_draft.add_msg("I'm Zichuan Yang\nI'm 22 years old\nThis is a test mail for the print format of the mail draft. The next task is to combine email functions"
-    #                   "and chat functions. Then, try to build a multi-tread architecture for this function.")
-    # print(new_draft)
-    # mailbox.list_draft()
-    # mailbox.add_draft(new_draft)
-    # mailbox.list_draft()
-    # mailbox.send_all_draft()
-    # mailbox.list_draft()
-
-    mailbox.get_all_mail()
-    mailbox.list_email()
-    for i in mailbox.unreadMailIDLst:
-        print(i)

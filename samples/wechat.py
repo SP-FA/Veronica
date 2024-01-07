@@ -1,12 +1,7 @@
-"""
-Author: Zichuan Yang
-Date: 2023-12-20
-"""
-
 import itchat
 from itchat.content import TEXT
 import time
-from chat_model import ChatData
+from vero_chat.chat_model import ChatSession
 
 
 if __name__ == '__main__':
@@ -20,11 +15,10 @@ if __name__ == '__main__':
         print(f"{msg.User['UserName']} receive: ", msg.text)
         friendName = msg.User["UserName"]
         if friendName not in chatDict.keys():
-            chatDict[friendName] = ChatData(friendName)
+            chatDict[friendName] = ChatSession(friendName)
         res = chatDict[friendName].gen_response(msg.text)
         print("send: ", res)
         itchat.send(res, toUserName=msg.User["UserName"])
-
 
     @itchat.msg_register(TEXT, isGroupChat=True)
     def group_reply(msg):
@@ -32,7 +26,7 @@ if __name__ == '__main__':
         print(f"{msg.User['NickName']} receive: ", msg.text)
         groupName = msg.User["NickName"]
         if groupName not in chatDict.keys():
-            chatDict[groupName] = ChatData(groupName)
+            chatDict[groupName] = ChatSession(groupName)
         res = chatDict[groupName].gen_response(msg.text)
         res = f"@{msg['ActualNickName']}\u2005 " + res
         print("send: ", res)

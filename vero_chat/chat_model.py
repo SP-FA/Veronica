@@ -2,8 +2,13 @@ import requests
 import json
 import openai
 
+from utils.configure_util import ConfLoader
+
 
 class ChatModel:
+    def __init__(self, path):
+        self.params = ConfLoader(path)
+
     def chat(self):
         raise NotImplementedError
 
@@ -11,11 +16,10 @@ class ChatModel:
         raise NotImplementedError
 
 
-access_token = "24.16af52018cd524ca8fa5d3133dfd6c09.2592000.1705601666.282335-45332416"
-
-
 class Ernie(ChatModel):  # ERNIE-Bot 4.0
-    def __init__(self):
+    def __init__(self, path):
+        super().__init__(path)
+        access_token = self.params["ernie_access_token"]
         self.url = f"https://aip.baidubce.com/rpc/2.0/ai_custom/v1/wenxinworkshop/chat/completions_pro?access_token={access_token}"
         self.headers = {
             'Content-Type': 'application/json',
@@ -47,12 +51,14 @@ class Ernie(ChatModel):  # ERNIE-Bot 4.0
 
 
 class ChatGPT(ChatModel):
-    def __init__(self):
-        openai.api_key = "sk-oqJn98z22yZNRRoa2cDe012cF65849048f84D3BaBe6e1c69"
-        openai.api_base = "https://oneapi.xty.app/v1"
+    def __init__(self, path):
+        super().__init__(path)
+        openai.api_key = self.params["openai_key"]
+        if "openai_base" in self.params.params.keys():
+            openai.api_base = self.params["openai_base"]
         # self.client = OpenAI(
-        #     base_url="https://oneapi.xty.app/v1",
-        #     api_key="sk-oqJn98z22yZNRRoa2cDe012cF65849048f84D3BaBe6e1c69"
+        #     base_url=
+        #     api_key=
         # )
         self.data = []
 
@@ -71,11 +77,18 @@ class ChatGPT(ChatModel):
         })
 
 
-class ChatData:
-    def __init__(self, name, model="chatgpt"):
+class ChatSession:
+    """实现一个新的会话
+
+    Attribute:
+        name (str): 会话的标题
+        model (Type): 一个 class 名字，Ernie 或者 ChatGPT
+    """
+    def __init__(self, name, model=ChatGPT, path="../conf.yaml"):
         self.name = name
-        if model.lower() == "ernie": self.model = Ernie()
-        if model.lower() == "chatgpt": self.model = ChatGPT()
+        # if model.lower() == "ernie": self.model = Ernie(path)
+        # if model.lower() == "chatgpt": self.model = ChatGPT(path)
+        self.model = model(path)
 
     def gen_response(self, msg):
         self.model.update_data("user", msg)
@@ -85,9 +98,8 @@ class ChatData:
 
 
 if __name__ == '__main__':
-    chat = ChatData('yzc', "chatgpt")
+    chat = ChatSession('yzc', ChatGPT, path="../conf.yaml")
     for i in range(3):
         ques = input(f"[{i}] You:\n\t")
         res = chat.gen_response(ques)
         print(f"[{i}] Veronica:\n\t{res}")
-

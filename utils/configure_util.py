@@ -59,3 +59,5 @@ class ConfLoader:
             info = info + f"[PARAM] {k}: {v}\n"
         return info
 
+    def __getitem__(self, key):
+        return self.params[key]

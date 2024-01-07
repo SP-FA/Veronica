@@ -8,8 +8,8 @@ class MyTestCase(unittest.TestCase):
     def test_print_mail(self):
         path = "../../conf.yaml"
         params = ConfLoader(path)
-        sender = params.params["sender"]
-        receiver = params.params["receiver"]
+        sender = params["sender"]
+        receiver = params["receiver"]
 
         draft = MailDraft(title="test", sender=sender, receivers=receiver)
         draft.add_msg("I'm Zichuan Yang\nI'm 22 years old\nThis is a test mail for the print format of the mail "
@@ -20,8 +20,8 @@ class MyTestCase(unittest.TestCase):
     def test_send_mail(self):
         path = "../../conf.yaml"
         params = ConfLoader(path)
-        sender = params.params["sender"]
-        receiver = params.params["receiver"]
+        sender = params["sender"]
+        receiver = params["receiver"]
 
         draft = MailDraft(title="test", sender=sender, receivers=receiver)
         mailbox = MailBox(params)
