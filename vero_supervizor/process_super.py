@@ -1,5 +1,19 @@
+import enum
 import os
 import psutil
+
+from vero_visualizer.text_visualizer import TextVisualizer
+
+
+class Timer(enum.Enum):
+    TIMER_OFF = 0
+    TIMER_ON = 1
+
+
+class ProcState(enum.Enum):
+    PROC_RESPONSE = 0
+    PROC_FINISH = 1
+    PROC_REGULAR = 2
 
 
 class Supervisor:
@@ -15,12 +29,6 @@ class Supervisor:
         user (str): 登录系统的用户名
         allProcess (List[Process]): 所有的进程
     """
-    TIMER_OFF = 0
-    TIMER_ON = 1
-
-    PROC_RESPONSE = 0
-    PROC_FINISH = 1
-    PROC_REGULAR = 2
 
     def __init__(self):
         """
@@ -52,7 +60,7 @@ class Supervisor:
                 "parents": proc.parents(),
                 "cfgPath": cfg
             }
-            procs.append(procs)
+            procs.append(procInfo)
         self.allProcess = procs
         return procs
 
@@ -71,7 +79,7 @@ class Supervisor:
 
         procs = []
         for proc in procList:
-            if "@" in proc.name:
+            if "@" in proc["name"]:
                 procs.append(proc)
         return procs
 
@@ -81,4 +89,13 @@ class Supervisor:
         self.allProcess = current_process
         return terminate_process
 
-
+    def __str__(self):
+        visualizer = TextVisualizer(80, "  |\n|  ")
+        totalString = ""
+        # for proc in self.allProcess:
+            # pid = proc["pid"]
+            # name = proc["name"]
+            # username = proc["username"]
+            # exe = proc["exe"]
+            # cwd = proc["cwd"]
+            # parents = proc["parents"]

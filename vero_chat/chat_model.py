@@ -52,6 +52,9 @@ class Ernie(ChatModel):  # ERNIE-Bot 4.0
 
 class ChatGPT(ChatModel):
     def __init__(self, path):
+        """
+        TODO: 在 params 里面添加是否是中转 key，是的话判断 openai 版本，选择不同的方式。
+        """
         super().__init__(path)
         openai.api_key = self.params["openai_key"]
         if "openai_base" in self.params.params.keys():

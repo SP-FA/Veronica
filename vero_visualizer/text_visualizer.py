@@ -1,5 +1,8 @@
 class TextVisualizer:
     def __init__(self, maxLineLength, afterLine):
+        """
+        TODO: 添加 beforeLine 参数
+        """
         self.maxLineLength = maxLineLength
         self.afterLine = afterLine
 
