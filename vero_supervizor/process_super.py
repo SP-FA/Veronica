@@ -18,12 +18,14 @@ class ProcState(enum.Enum):
 
 class Supervisor:
     """实现一个监视器类，主要功能为：
-    - 获取全部进程
+    - 获取全部进程（Done）
     - TODO: 打印进程信息
     - 获取注册的进程信息（如果进程名中含有 '@'，则定义为 被注册，被注册的进程可以通过 Supervisor 获取个性化的信息）
-        - 获取注册的进程
+        - 获取注册的进程（Done）
         - TODO: 获取个性化信息
-        - TODO: 手动打印 / 完成时打印 / (定时打印)
+        - TODO: 手动打印 / 完成时打印 / 定时打印
+
+    TODO: 探索一下使用 socket 实现 supervisor 的可行性，目前通过监测进程的方式有很多缺陷
 
     Attributes:
         user (str): 登录系统的用户名
@@ -31,12 +33,8 @@ class Supervisor:
     """
 
     def __init__(self):
-        """
-        TODO: 原本需要在这里登录邮箱，但是应该将这一功能解耦所以目前 Supervisor 类不包括邮箱功能
-        """
         self.user = os.getlogin()
-        self.allProcess = []
-        self.find_process()
+        self.allProcess = self.find_process()
 
     def find_process(self):
         """查找该账户的所有进程，"root" 用户查看所有进程
@@ -61,7 +59,6 @@ class Supervisor:
                 "cfgPath": cfg
             }
             procs.append(procInfo)
-        self.allProcess = procs
         return procs
 
     def find_registered_process(self, procList=None):
@@ -75,7 +72,7 @@ class Supervisor:
                   格式为 {"pid":, "name":, "username", "exe", "cwd", "parents", "cfgPath":}
         """
         if procList is None:
-            procList = self.allProcess
+            procList = self.find_process()
 
         procs = []
         for proc in procList:
