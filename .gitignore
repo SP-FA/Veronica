@@ -1,3 +1,5 @@
 conf.yaml
 .idea
 **/__pycache__/
+vero_auto_sign/cfgs/*
+!vero_auto_sign/cfgs/template.cfg

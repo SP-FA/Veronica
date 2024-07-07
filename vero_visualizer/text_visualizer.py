@@ -1,9 +1,15 @@
 class TextVisualizer:
-    def __init__(self, maxLineLength, afterLine):
-        """
-        TODO: 添加 beforeLine 参数
-        """
+    """
+    实现格式化输出文本的类，在给定行宽的情况下自动控制文本长度
+
+    Attribute:
+        maxLineLength (int): 最大行宽
+        beforeLine (str): 行首固定添加的字符
+        afterLine (str): 行尾固定添加的字符
+    """
+    def __init__(self, maxLineLength, beforeLine="", afterLine=""):
         self.maxLineLength = maxLineLength
+        self.beforeLine = beforeLine
         self.afterLine = afterLine
 
     def __call__(self, text):
@@ -24,9 +30,23 @@ class TextVisualizer:
         visualStrings = []
         for section in sections:
             visualStrings.extend(self._sep_section(section))
-            visualStrings.append(self._fill_line(" "))
+        return "".join(visualStrings)
 
-        return self.afterLine.join(visualStrings)
+    @property
+    def splitLine(self):
+        """添加一行分割线
+        """
+        return self.beforeLine + "-" * self.maxLineLength + self.afterLine + "\n"
+
+    @property
+    def blankLine(self):
+        """添加一行空行
+        """
+        return self._fill_line(" ")
+
+    @property
+    def headLine(self):
+        return "=" * (self.maxLineLength + len(self.beforeLine) + len(self.afterLine)) + "\n"
 
     def _sep_section(self, section):
         """把一个段落合理的分配为多行，每一行长度不超过 self.maxLineLength，段落后加一行空行
@@ -64,8 +84,9 @@ class TextVisualizer:
         Returns:
             str: 一个完整的行
         """
+        line = line.lstrip()
         m = self._cal_strlen(line)
-        return line + " " * (self.maxLineLength - int(m + 0.75))
+        return self.beforeLine + line + " " * (self.maxLineLength - int(m + 0.75)) + self.afterLine + "\n"
 
     def _get_word(self, section, index):
         """从某个位置开始取出一个单词。如果是汉字，则只取出这一个字。如果是英文字母，则取出一个完整的单词。

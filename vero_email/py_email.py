@@ -38,7 +38,7 @@ class MailDraft:
         self.attachments = attachments
         self.id = ""
 
-        self.visual = TextVisualizer(self.LINE_LENGTH, "  |\n|  ")
+        self.visual = TextVisualizer(self.LINE_LENGTH, beforeLine="|  ", afterLine="  |")
 
     def send_draft(self, smtpObj):
         message = MIMEMultipart()
@@ -112,17 +112,21 @@ class MailDraft:
         return f
 
     def __str__(self):
-        title = self.visual("Subject: " + self.title)
-        sender = self.visual("Sender : " + self.sender)
+        title  = self.visual(f"Subject: {self.title}")
+        sender = self.visual(f"Sender : {self.sender}")
         content = self.visual(self.msg)
-        return (f"=============================Draft=============================\n"
-                f"|                                                             |\n"
-                f"|  {title}  |\n"
-                f"|  {sender}  |\n"
-                f"|  ---------------------------------------------------------  |\n"
-                f"|                                                             |\n"
-                f"|  {content}  |\n"
-                f"===============================================================")
+        return (
+            f"=============================Draft=============================\n"
+            f"{self.visual.blankLine}"
+            f"{title}"
+            f"{self.visual.blankLine}"
+            f"{sender}"
+            f"{self.visual.blankLine}"
+            f"{self.visual.splitLine}"
+            f"{self.visual.blankLine}"
+            f"{content}"
+            f"===============================================================\n"
+        )
 
 
 class MailBox:

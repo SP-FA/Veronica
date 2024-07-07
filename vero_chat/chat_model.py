@@ -32,7 +32,7 @@ class Ernie(ChatModel):  # ERNIE-Bot 4.0
                 },
                 {
                     'role': 'assistant',
-                    'content': '我是 Veronica，一位赛博管家。'
+                    'content': '我是 Veronica'
                 }
             ]
         }
