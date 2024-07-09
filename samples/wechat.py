@@ -5,7 +5,7 @@ from vero_chat.chat_model import ChatSession
 
 
 if __name__ == '__main__':
-    itchat.auto_login(hotReload=True)  # hotReload=True 可以暂存登录状态，退出后一定时间内重启不用再次扫码登录
+    itchat.auto_login(hotReload=True)  # , enableCmdQR=2 hotReload=True 可以暂存登录状态，退出后一定时间内重启不用再次扫码登录
     time.sleep(1)
     chatDict = {}
 

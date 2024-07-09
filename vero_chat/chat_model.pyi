@@ -16,6 +16,7 @@ class Ernie(ChatModel):
 
 class ChatGPT(ChatModel):
     def __init__(self, path):
+        self.client = None
         self.data = []
     def chat(self) -> str: ...
     def update_data(self, role: str, content: str): ...

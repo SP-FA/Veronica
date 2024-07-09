@@ -1,9 +1,9 @@
 import requests
 import json
-import openai
+import os
+from openai import OpenAI
 
 from utils.configure_util import ConfLoader
-
 
 class ChatModel:
     def __init__(self, path):
@@ -56,21 +56,30 @@ class ChatGPT(ChatModel):
         TODO: 在 params 里面添加是否是中转 key，是的话判断 openai 版本，选择不同的方式。
         """
         super().__init__(path)
-        openai.api_key = self.params["openai_key"]
-        if "openai_base" in self.params.params.keys():
-            openai.api_base = self.params["openai_base"]
+        # openai.api_key = self.params["openai_key"]
+        # if "openai_base" in self.params.params.keys():
+        #     openai.api_base = self.params["openai_base"]
         # self.client = OpenAI(
         #     base_url=
         #     api_key=
         # )
+        self.client = OpenAI(
+            api_key=self.params["openai_key"],
+            base_url=self.params["openai_base"]
+        )
         self.data = []
 
     def chat(self):
-        response = openai.ChatCompletion.create(
+        # response = openai.ChatCompletion.create(
+        #     model="gpt-3.5-turbo",
+        #     messages=self.data
+        # )
+        response = self.client.chat.completions.create(
             model="gpt-3.5-turbo",
             messages=self.data
         )
-        result = response["choices"][0]["message"]["content"]
+        # result = response["choices"][0]["message"]["content"]
+        result = response.choices[0].message.content
         return result
 
     def update_data(self, role, content):
