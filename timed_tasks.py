@@ -2,6 +2,9 @@ from utils.configure_util import ConfLoader
 from vero_auto_sign.get_params import get_user_params
 from vero_auto_sign.sign_request import sign_process
 
+import sys
+sys.path.append(".")
+
 if __name__ == "__main__":
     path = "./conf.yaml"
     params = ConfLoader(path)
