@@ -20,7 +20,7 @@ if __name__ == "__main__":
 
     pemPath = "./vero_auto_sign/public_key.pem"
     userList = {
-        "SPFA": "./vero_auto_sign/cfgs/example.cfg",
+        "SPFA": "./vero_auto_sign/cfgs/SPFA.cfg",
         "momo": "./vero_auto_sign/cfgs/momo.cfg",
         "wfzzj": "./vero_auto_sign/cfgs/wfzzj.cfg"
     }

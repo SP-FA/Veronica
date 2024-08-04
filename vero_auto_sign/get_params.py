@@ -112,6 +112,6 @@ def get_user_params(userCfgPath, pemPath):
 
 
 if __name__ == "__main__":
-    get_user_params("./cfgs/example.cfg", "./public_key.pem")
+    get_user_params("./cfgs/SPFA.cfg", "./public_key.pem")
 
 

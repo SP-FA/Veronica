@@ -19,6 +19,12 @@
     hdid = e202304121516551
     region = prod_gf_cn
     dh = 
+   
+    [zzz_info]
+    zzz_uid = 
+    zzz-hdid = e202406242138391
+    zzz-region = prod_gf_cn
+    dh = zzz
     
     [credentials]
     
@@ -32,5 +38,5 @@
     - uid: 原神 / 崩铁 uid
     - dh: 空着不填
 
-2. 运行 get_params.py 文件，获取参数
-3. 运行 sign_request.py 文件，签到
+2. 运行 get_params.py 文件中的 get_user_params 方法，获取参数
+3. 运行 sign_request.py 文件中的 sign_process 方法，签到
