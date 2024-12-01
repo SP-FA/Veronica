@@ -85,7 +85,7 @@ def sign_process(user, cfgPath, params):
     msg = sign(cfgPath, "zzz")
     draft.add_msg(f"- [zzz] {user}: {msg}\n")
 
-    print(draft)
+    # print(draft)
     mailbox.add_draft(draft)
     mailbox.list_draft()
     mailbox.send_all_draft()

@@ -7,7 +7,7 @@ import requests
 import json
 import configparser
 
-from vero_auto_sign.encode_account_pwd import get_encode
+from vero_auto_sign.encode_account_pwd import update_encoded_credentials
 
 
 def HQtokenAlogin_ticket(account, pwd):
@@ -91,7 +91,7 @@ def get_user_params(userCfgPath, pemPath):
         assert account != ''
         assert password != ''
     except:
-        config = get_encode(pemPath, config)
+        config = update_encoded_credentials(pemPath, config)
         account = config['credentials']['account']
         password = config['credentials']['password']
 

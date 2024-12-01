@@ -131,7 +131,7 @@ class TextVisualizer:
                 length += 1
         return length
 
-    @staticmethod
-    def _is_Chinese(char: str):
-        if '\u4e00' <= char <= '\u9fff': return True
-        return False
+    # @staticmethod
+    # def _is_Chinese(char: str):
+    #     if '\u4e00' <= char <= '\u9fff': return True
+    #     return False

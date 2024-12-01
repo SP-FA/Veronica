@@ -12,7 +12,7 @@ from vero_visualizer.text_visualizer import TextVisualizer
 
 
 class MailDraft:
-    """ 用于存储 邮件信息 的类
+    """ 用于维护一封邮件 / 草稿
 
     Attributes:
         IMG_EXT (List[str]): 常见的图片格式后缀

@@ -1,6 +1,5 @@
 import requests
 import json
-import os
 from openai import OpenAI
 
 from utils.configure_util import ConfLoader
