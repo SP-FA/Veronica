@@ -7,7 +7,7 @@ import time
 from vero_auto_sign.get_params import get_user_params
 from vero_auto_sign.sign_request import sign
 from utils.configure_util import ConfLoader
-from vero_email.py_email import MailBox, MailDraft
+from vero_chat_agent.vero_email.py_email import MailBox, MailDraft
 
 if __name__ == "__main__":
     params = ConfLoader("../conf.yaml")

@@ -1,10 +1,11 @@
 from vero_supervizor.supervisor_enum import ProcState
+from vero_chat_agent.chat_base import MessageDraft
 
 
 class ProcessAgentActions:
     """表示一个被监控的进程的可用操作
     """
-    def __init__(self, custom_actions: dict):
+    def __init__(self, custom_actions: dict, msg_draft: MessageDraft):
         """
         Args:
             agent (ProcessAgent): 关联的进程代理

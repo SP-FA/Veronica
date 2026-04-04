@@ -1,0 +1,6 @@
+mail_host: ""
+mail_user: ""
+mail_pass: ""
+sender: ""
+receiver:
+  - ""

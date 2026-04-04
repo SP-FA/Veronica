@@ -8,10 +8,10 @@ from email.mime.image import MIMEImage
 from email.header import decode_header
 from tqdm import tqdm
 
-from vero_visualizer.text_visualizer import TextVisualizer
+from vero_chat_agent.chat_base import MessageTransceiver, MessageDraft
 
 
-class MailDraft:
+class MailDraft(MessageDraft):
     """ 用于维护一封邮件 / 草稿
 
     Attributes:
@@ -26,19 +26,15 @@ class MailDraft:
         id (str): 收件箱内邮件的 id
     """
     IMG_EXT = ["jpg", "png", "jpeg", "gif"]
-    LINE_LENGTH = len("=========================================================")
 
     def __init__(self, title, sender, receivers, msg="", attachments=None):
+        super().__init__(receivers, msg)
         if attachments is None:
             attachments = []
         self.title = title
         self.sender = sender
-        self.receivers = receivers  # [""]
-        self.msg = msg
         self.attachments = attachments
         self.id = ""
-
-        self.visual = TextVisualizer(self.LINE_LENGTH, beforeLine="|  ", afterLine="  |")
 
     def send_draft(self, smtpObj):
         message = MIMEMultipart()
@@ -112,24 +108,29 @@ class MailDraft:
         return f
 
     def __str__(self):
-        title  = self.visual(f"Subject: {self.title}")
-        sender = self.visual(f"Sender : {self.sender}")
-        content = self.visual(self.msg)
+        title  = self.text_visual(f"Subject: {self.title}")
+        sender = self.text_visual(f"Sender : {self.sender}")
+        r = self.text_visual(f"Receivers :")
+        receivers = self.text_visual(self.receivers)
+        content = self.text_visual(self.msg)
         return (
             f"=============================Draft=============================\n"
-            f"{self.visual.blankLine}"
+            f"{self.text_visual.blankLine}"
             f"{title}"
-            f"{self.visual.blankLine}"
+            f"{self.text_visual.blankLine}"
             f"{sender}"
-            f"{self.visual.blankLine}"
-            f"{self.visual.splitLine}"
-            f"{self.visual.blankLine}"
+            f"{self.text_visual.blankLine}"
+            f"{r}"
+            f"{receivers}"
+            f"{self.text_visual.blankLine}"
+            f"{self.text_visual.splitLine}"
+            f"{self.text_visual.blankLine}"
             f"{content}"
             f"===============================================================\n"
         )
 
 
-class MailBox:
+class MailBox(MessageTransceiver):
     """ 维护一个邮箱，支持收发邮件
 
     Attributes:
@@ -141,6 +142,7 @@ class MailBox:
         unreadMailIDLst (List[str]): 未读邮件列表
     """
     def __init__(self, params):
+        super().__init__()
         host = params["mail_host"]
         username = params["mail_user"]
         pwd = params["mail_pass"]
@@ -163,7 +165,6 @@ class MailBox:
         self.imapObj.login(username, pwd)
         self.imapObj.select("inbox")
 
-        self.draftLst = []
         self.emailLst = []
         self.emailIDLst = []
         self.unreadMailIDLst = []
@@ -171,24 +172,24 @@ class MailBox:
     def add_draft(self, draft):
         self.draftLst.append(draft)
 
-    def _find_draft_title(self, title):
-        for i in self.draftLst:
-            if i.title != title: continue
-            return self.draftLst.index(i)
-        return -1
+    # def _find_draft_title(self, title):
+    #     for i in self.draftLst:
+    #         if i.title != title: continue
+    #         return self.draftLst.index(i)
+    #     return -1
 
     def list_draft(self):
         print("Drafts:")
         for i in self.draftLst:
             print(" - ", i.title)
 
-    def send_draft(self, title):
-        idx = self._find_draft_title(title)
-        if idx != -1:
-            self.draftLst[idx].send_draft(self.smtpObj)
-            del self.draftLst[idx]
-
-    def send_all_draft(self):
+    # def send_draft(self, title):
+    #     idx = self._find_draft_title(title)
+    #     if idx != -1:
+    #         self.draftLst[idx].send_draft(self.smtpObj)
+    #         del self.draftLst[idx]
+    
+    def send(self):
         for i in self.draftLst:
             i.send_draft(self.smtpObj)
         self.draftLst = []
@@ -202,7 +203,7 @@ class MailBox:
                 data = data.decode("gb2312", 'replace')
         return data
 
-    def get_all_mail(self):
+    def receive(self):
         self.imapObj.noop()
         status, msgs = self.imapObj.search(None, "ALL")
         msgs = msgs[0].split()

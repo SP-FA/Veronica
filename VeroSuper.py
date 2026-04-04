@@ -1,6 +1,6 @@
 import psutil
 import os
-from vero_email.py_email import Mail
+from vero_chat_agent.vero_email.py_email import Mail
 from threading import Timer
 from utils.configure_util import rd_yaml
 

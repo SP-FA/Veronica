@@ -12,7 +12,35 @@ class TextVisualizer:
         self.beforeLine = beforeLine
         self.afterLine = afterLine
 
-    def __call__(self, text):
+    def __call__(self, text, prefix=""):
+        """直接调用实例即可得到格式化后的字符串
+        
+        Args:
+            text (str | list): 需要格式化的文本
+            prefix (str): 每行开头添加的前缀，默认为空字符串
+        """
+        if isinstance(text, list):
+            text = [prefix + line for line in text]
+            text = "\n".join(text)
+        return self._format_text(text)
+
+    @property
+    def splitLine(self):
+        """添加一行分割线
+        """
+        return self.beforeLine + "-" * self.maxLineLength + self.afterLine + "\n"
+
+    @property
+    def blankLine(self):
+        """添加一行空行
+        """
+        return self._fill_line(" ")
+
+    @property
+    def headLine(self):
+        return "=" * (self.maxLineLength + len(self.beforeLine) + len(self.afterLine)) + "\n"
+
+    def _format_text(self, text):
         """将输入的文本生成为一个可以直接打印的格式化字符串。
         1. text -> 分成多个 sections
         2. section -> 分成多个 words
@@ -31,22 +59,6 @@ class TextVisualizer:
         for section in sections:
             visualStrings.extend(self._sep_section(section))
         return "".join(visualStrings)
-
-    @property
-    def splitLine(self):
-        """添加一行分割线
-        """
-        return self.beforeLine + "-" * self.maxLineLength + self.afterLine + "\n"
-
-    @property
-    def blankLine(self):
-        """添加一行空行
-        """
-        return self._fill_line(" ")
-
-    @property
-    def headLine(self):
-        return "=" * (self.maxLineLength + len(self.beforeLine) + len(self.afterLine)) + "\n"
 
     def _sep_section(self, section):
         """把一个段落合理的分配为多行，每一行长度不超过 self.maxLineLength，段落后加一行空行

@@ -171,4 +171,9 @@ pip install -r requirements.txt
   - [ ] : host
 - [ ] : vero_visualizer
   - [x] : text_visualizer
+    - [x] : 支持格式化打印 list
+    - [ ] : 支持左、中、右对齐
   - [ ] : dict_visualizer
+    - [ ] : 支持统一一个 column 的宽度
+    - [ ] : 支持左、中、右对齐
+- [ ] : 为每个组件添加 logger

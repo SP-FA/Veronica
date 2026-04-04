@@ -1,7 +1,7 @@
 import unittest
 
 from utils.configure_util import ConfLoader
-from vero_email.py_email import MailDraft, MailBox
+from vero_chat_agent.vero_email.py_email import MailDraft, MailBox
 
 
 class MyTestCase(unittest.TestCase):

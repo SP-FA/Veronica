@@ -1,7 +1,7 @@
 import time
 
 from utils.configure_util import ConfLoader
-from vero_email.py_email import MailBox, MailDraft
+from vero_chat_agent.vero_email.py_email import MailBox, MailDraft
 from vero_chat.chat_model import ChatSession
 
 

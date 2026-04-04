@@ -7,7 +7,7 @@ import requests
 import json
 import configparser
 
-from vero_email.py_email import MailBox, MailDraft
+from vero_chat_agent.vero_email.py_email import MailBox, MailDraft
 
 GAME_DICT = {
     "genshin": "genshin_info",
