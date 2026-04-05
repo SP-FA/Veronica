@@ -2,20 +2,44 @@ import socket
 import json
 import threading
 
-from vero_supervizor.supervisor_enum import ProcState
-from vero_supervizor.supervisor_proc_agent import ProcessAgent, ProcessAgentActions
-
-lock = threading.Lock()  # 防止多线程写冲突
+from vero_supervizor import ReportCondition, TaskType, ProcessAgent, ProcessAgentActions
 
 
 class SupervisorHost:
     """维护一个监控进程的主机信息
     """
-    def __init__(self, port: int, actions: ProcessAgentActions):
-        self.host = '127.0.0.1'
+    def __init__(self, port: int, actions: ProcessAgentActions, message_cfg: dict):
+        """初始化主机，启动监听线程
+        
+        Args:
+            port (int): 监听端口
+            actions (ProcessAgentActions): 进程代理的可用操作
+            message_cfg (dict): 消息配置，包含消息发送方式等信息，格式为：{
+                "type": "email" / "wechat", 消息类型，用于指定报告的发送方式,
+                "receivers": list, 接收者列表,
+                "sender": str, 发送者（仅邮件类型需要）,
+                "mail_params": dict, 邮件发送参数（仅邮件类型需要），格式为 {
+                    "mail_host": str, SMTP 服务器地址,
+                    "mail_user": str, 邮箱用户名,
+                    "mail_pass": str, 邮箱密码,
+                }
+            }
+        """
+        self.host = '0.0.0.0'
         self.port = port
-        self.proccesses = {}  # 监控的进程列表，key 为进程名称，value 为进程
+        self.processes = {}  # 监控的进程列表，key 为进程名称，value 为进程
         self.actions = actions
+        self.message_cfg = message_cfg
+
+        self.processes_lock = threading.Lock()
+        self.transceiver_lock = threading.Lock()
+
+        if self.message_cfg["type"] == "email":
+            from vero_chat_agent import MailBox
+            self.message_transceiver = MailBox(self.message_cfg["mail_params"])
+        elif self.message_cfg["type"] == "wechat":
+            from vero_chat_agent import WeChat
+            self.message_transceiver = WeChat()
 
         t = threading.Thread(target=self.start_listen, daemon=True)
         t.start()
@@ -25,6 +49,7 @@ class SupervisorHost:
         """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
             s.bind((self.host, self.port))
+            s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.listen()
             print(f"Listening on {self.host}:{self.port}")
 
@@ -74,21 +99,31 @@ class SupervisorHost:
             msg (dict): 客户端发送的消息，包含监控数据，格式为：{
                 "task": "register" / "update" / "finish",
                 "proc_name": "process1",
-                "report_condition": ReportCondition,
+                "report_condition": ReportCondition 对象,
                 "data": {...}
             }
         """
         task = msg.get("task", "unknown")  # 任务标识
         proc_name = msg.get("proc_name", "unknown")
-        if task == "register":
-            report_condition = msg.get("report_condition", {})
-            actions = msg.get("actions", self.actions)
-            self.proccesses[proc_name] = ProcessAgent(proc_name, report_condition, actions)
-        elif task == "update":
-            data = msg.get("data", {})
-            self.proccesses[proc_name].update(data)
-        elif task == "finish":
-            self.proccesses[proc_name].finish()
-        else:
-            print("Unknown task:", task)
+
+        with self.processes_lock:
+            if task == TaskType.REGISTER:
+                report_condition = msg.get("report_condition", ReportCondition({}))
+                actions = msg.get("actions") or ProcessAgentActions(self.actions.custom_actions)
+                self.processes[proc_name] = ProcessAgent(proc_name, report_condition, actions, self.message_cfg)
+                return
+            agent = self.processes.get(proc_name)
+        if not agent:
+            print("Unknown process:", proc_name)
+            return
+        
+        draft = None
+        if   task == TaskType.UPDATE: draft = agent.update(msg.get("data", {}))
+        elif task == TaskType.FINISH: draft = agent.finish()
+        else: print("Unknown task:", task)
+        
+        if draft is None: return
+        with self.transceiver_lock:
+            self.message_transceiver.add_draft(draft)
+            self.message_transceiver.send()
 

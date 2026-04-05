@@ -1,13 +1,13 @@
 import unittest
 
-from utils.configure_util import ConfLoader
+from utils.configure_util import CfgLoader
 from vero_chat_agent.vero_email.py_email import MailDraft, MailBox
 
 
 class MyTestCase(unittest.TestCase):
     def test_print_mail(self):
         path = "../../conf.yaml"
-        params = ConfLoader(path)
+        params = CfgLoader(path)
         sender = params["sender"]
         receiver = params["receiver"]
 
@@ -19,7 +19,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_send_mail(self):
         path = "../../conf.yaml"
-        params = ConfLoader(path)
+        params = CfgLoader(path)
         sender = params["sender"]
         receiver = params["receiver"]
 
@@ -31,7 +31,7 @@ class MyTestCase(unittest.TestCase):
 
     def test_receive_mail(self):
         path = "../../conf.yaml"
-        params = ConfLoader(path)
+        params = CfgLoader(path)
 
         mailbox = MailBox(params)
         mailbox.get_all_mail()

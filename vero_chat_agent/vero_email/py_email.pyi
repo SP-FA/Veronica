@@ -2,7 +2,7 @@ from typing import List, Dict
 from smtplib import SMTP
 from email.mime.nonmultipart import MIMENonMultipart
 
-from utils.configure_util import ConfLoader
+from utils.configure_util import CfgLoader
 
 
 class MailDraft:
@@ -25,7 +25,7 @@ class MailDraft:
     def _cal_strlen(self, sentence: str) -> int: ...
 
 class MailBox:
-    def __init__(self, params: ConfLoader):
+    def __init__(self, params: CfgLoader):
         self.smtpObj = None
         self.imapObj = None
         self.draftLst = None

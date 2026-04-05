@@ -1,7 +1,7 @@
 import yaml
 
 
-class ConfLoader:
+class CfgLoader:
     """用于加载配置文件，并进行交互
 
     Attributes:

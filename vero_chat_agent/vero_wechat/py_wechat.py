@@ -4,20 +4,23 @@ from collections import defaultdict
 import itchat
 from itchat.content import TEXT
 
-from vero_chat_agent.chat_base import MessageTransceiver, MessageDraft
+from vero_chat_agent import MessageTransceiver, MessageDraft
 
 
 class WeChatDraft(MessageDraft):
     """ 用于维护一条微信消息 / 草稿"""
-    def __init__(self, receivers, msg):
-        super().__init__(receivers, msg)
+    def __init__(self, title, receivers, msg=""):
+        super().__init__(title, receivers, msg)
     
     def __str__(self):
+        title  = self.text_visual(f"Subject: {self.title}")
         r = self.text_visual(f"Receivers :")
         receivers = self.text_visual(self.receivers)
         content = self.text_visual(self.msg)
         return (
             f"=============================Draft=============================\n"
+            f"{self.text_visual.blankLine}"
+            f"{title}"
             f"{self.text_visual.blankLine}"
             f"{r}"
             f"{receivers}"
@@ -62,14 +65,14 @@ class WeChat(MessageTransceiver):
                 self.unreadLst.append(WeChatDraft([k], i))
         self.receive_buffer = defaultdict(list)
 
-    def add_draft(self, draft):
-        self.draftLst.append(draft)
-
     def send(self):
         """ target 为微信的 UserName 或 NickName """
         for i in self.draftLst:
-            print(f"WeChat Send to {i.target}: {i.msg}")
-            itchat.send(i.msg, toUserName=i.target)
+            title = i.title
+            msg = i.msg
+            content = f"{title}\n{msg}"
+            print(f"WeChat Send to {i.target}: {content}")
+            itchat.send(content, toUserName=i.target)
         self.draftLst = []
 
     def logout(self):

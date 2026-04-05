@@ -1,6 +1,6 @@
 from typing import Dict
 
-class ConfLoader:
+class CfgLoader:
     def __init__(self, path: str):
         self.params = None
     def _read(self, path: str) -> Dict: ...

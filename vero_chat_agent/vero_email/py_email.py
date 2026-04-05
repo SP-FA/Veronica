@@ -8,7 +8,7 @@ from email.mime.image import MIMEImage
 from email.header import decode_header
 from tqdm import tqdm
 
-from vero_chat_agent.chat_base import MessageTransceiver, MessageDraft
+from vero_chat_agent import MessageTransceiver, MessageDraft
 
 
 class MailDraft(MessageDraft):
@@ -28,13 +28,12 @@ class MailDraft(MessageDraft):
     IMG_EXT = ["jpg", "png", "jpeg", "gif"]
 
     def __init__(self, title, sender, receivers, msg="", attachments=None):
-        super().__init__(receivers, msg)
+        super().__init__(title, receivers, msg)
         if attachments is None:
             attachments = []
-        self.title = title
         self.sender = sender
         self.attachments = attachments
-        self.id = ""
+        # self.id = ""
 
     def send_draft(self, smtpObj):
         message = MIMEMultipart()
@@ -56,9 +55,6 @@ class MailDraft(MessageDraft):
                   'message is sent successfully!')
         except smtplib.SMTPException as e:
             print('Error: ', e)
-
-    def add_msg(self, newMsg):
-        self.msg = self.msg + newMsg
 
     def add_file(self, newFileLst):
         self.attachments.extend(newFileLst)
@@ -91,7 +87,7 @@ class MailDraft(MessageDraft):
         return fileList
 
     @staticmethod
-    def _make_img(self, imgPath, imgName):
+    def _make_img(imgPath, imgName):
         with open(imgPath, 'rb') as fp:
             img = MIMEImage(fp.read())
             img['Content-Type'] = 'application/octet-stream'
@@ -99,7 +95,7 @@ class MailDraft(MessageDraft):
         return img
 
     @staticmethod
-    def _make_file(self, fPath, fName):
+    def _make_file(fPath, fName):
         with open(fPath, 'rb') as fp:
             content = fp.read()
             f = MIMEText(content, 'plain', 'utf-8')
@@ -168,9 +164,6 @@ class MailBox(MessageTransceiver):
         self.emailLst = []
         self.emailIDLst = []
         self.unreadMailIDLst = []
-
-    def add_draft(self, draft):
-        self.draftLst.append(draft)
 
     # def _find_draft_title(self, title):
     #     for i in self.draftLst:

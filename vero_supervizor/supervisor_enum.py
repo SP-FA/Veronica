@@ -1,4 +1,5 @@
 from typing import Dict
+from enum import IntEnum
 
 
 class ReportCondition:
@@ -11,13 +12,19 @@ class ReportCondition:
         UPDATE (boolean): 进程状态更新时立即报告该进程状态
     """
     def __init__(self, condition:Dict):
-        self.RESPONESE = condition.get("response", False)
-        self.REGULAR = condition.get("regular", False)
-        self.UPDATE = condition.get("update", False)
-        self.FINISH = condition.get("finish", False)
+        self.RESPONSE = condition.get("response", condition.get("RESPONSE", False))
+        self.REGULAR = condition.get("regular", condition.get("REGULAR", False))
+        self.UPDATE = condition.get("update", condition.get("UPDATE", False))
+        self.FINISH = condition.get("finish", condition.get("FINISH", False))
 
 
-class ProcState:
+class TaskType:
+    REGISTER = "register"
+    UPDATE = "update"
+    FINISH = "finish"
+
+
+class ProcState(IntEnum):
     """表示进程状态的枚举
 
     Attributes:

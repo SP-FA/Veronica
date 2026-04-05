@@ -1,4 +1,4 @@
-from utils.configure_util import ConfLoader
+from utils.configure_util import CfgLoader
 from vero_auto_sign.get_params import get_user_params
 from vero_auto_sign.sign_request import sign_process
 import sys
@@ -6,7 +6,7 @@ import sys
 if __name__ == "__main__":
     rootPath = sys.path[0]
     path = f"{rootPath}/conf.yaml"
-    params = ConfLoader(path)
+    params = CfgLoader(path)
 
     # auto sign task
     users = ["SPFA"]

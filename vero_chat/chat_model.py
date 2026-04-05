@@ -2,11 +2,11 @@ import requests
 import json
 from openai import OpenAI
 
-from utils.configure_util import ConfLoader
+from utils.configure_util import CfgLoader
 
 class ChatModel:
     def __init__(self, path):
-        self.params = ConfLoader(path)
+        self.params = CfgLoader(path)
 
     def chat(self):
         raise NotImplementedError
