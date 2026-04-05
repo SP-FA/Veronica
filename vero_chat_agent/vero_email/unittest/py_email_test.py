@@ -1,7 +1,14 @@
 import unittest
 
 from utils.configure_util import CfgLoader
+from utils import VERO_CHAT_AGENT_LOG_DIR, get_logger
 from vero_chat_agent.vero_email.py_email import MailDraft, MailBox
+
+logger = get_logger(
+    __name__,
+    VERO_CHAT_AGENT_LOG_DIR,
+    log_filename="vero_email_unittest.log",
+)
 
 
 class MyTestCase(unittest.TestCase):
@@ -15,7 +22,7 @@ class MyTestCase(unittest.TestCase):
         draft.add_msg("I'm Zichuan Yang\nI'm 22 years old\nThis is a test mail for the print format of the mail "
                       "draft. The next task is to combine email functions and chat functions. Then, try to build a "
                       "multi-tread architecture for this function.")
-        print(draft)
+        logger.info("%s", draft)
 
     def test_send_mail(self):
         path = "../../conf.yaml"
@@ -37,7 +44,7 @@ class MyTestCase(unittest.TestCase):
         mailbox.get_all_mail()
         mailbox.list_email()
         for i in mailbox.unreadMailIDLst:
-            print(i)
+            logger.info("%s", i)
 
 
 if __name__ == '__main__':

@@ -4,7 +4,10 @@ from collections import defaultdict
 import itchat
 from itchat.content import TEXT
 
+from utils import VERO_WECHAT_LOG_DIR, get_logger
 from vero_chat_agent import MessageTransceiver, MessageDraft
+
+logger = get_logger(__name__, VERO_WECHAT_LOG_DIR, log_filename="vero_wechat.log")
 
 
 class WeChatDraft(MessageDraft):
@@ -50,12 +53,12 @@ class WeChat(MessageTransceiver):
 
     def _handle_msg(self, msg):
         if msg.User["UserName"] == "filehelper": return
-        print(f"{msg.User['UserName']} receive: ", msg.text)
+        logger.info("%s receive: %s", msg.User["UserName"], msg.text)
         self.receive_buffer[msg.User["UserName"]] = msg.text
 
     def _handle_group_msg(self, msg):
         if not msg['isAt']: return
-        print(f"{msg.User['NickName']} receive: ", msg.text)
+        logger.info("%s receive: %s", msg.User["NickName"], msg.text)
         self.receive_buffer[msg.User["NickName"]].append(msg.text)
 
     def receive(self):
@@ -71,7 +74,7 @@ class WeChat(MessageTransceiver):
             title = i.title
             msg = i.msg
             content = f"{title}\n{msg}"
-            print(f"WeChat Send to {i.target}: {content}")
+            logger.info("WeChat Send to %s: %s", i.target, content)
             itchat.send(content, toUserName=i.target)
         self.draftLst = []
 

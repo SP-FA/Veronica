@@ -8,6 +8,10 @@ import json
 import configparser
 
 from vero_chat_agent.vero_email.py_email import MailBox, MailDraft
+from utils import VERO_AUTO_SIGN_LOG_DIR, get_logger
+
+logger = get_logger(__name__, VERO_AUTO_SIGN_LOG_DIR, log_filename="sign_request.log")
+
 
 GAME_DICT = {
     "genshin": "genshin_info",
@@ -37,7 +41,8 @@ def sign(cfgPath: str, gameName: str) -> str:
         cfg = configparser.ConfigParser()
         cfg.read(cfgPath)
     except:
-        raise f"{cfgPath} is not available for game {gameName}"
+        logger.error("%s is not available for game %s", cfgPath, gameName)
+        raise
 
     gameSection = GAME_DICT[gameName.lower()]
     uid = cfg[gameSection]['uid']
@@ -85,7 +90,7 @@ def sign_process(user, cfgPath, params):
     msg = sign(cfgPath, "zzz")
     draft.add_msg(f"- [zzz] {user}: {msg}\n")
 
-    # print(draft)
+    logger.info("%s", draft)
     mailbox.add_draft(draft)
     mailbox.list_draft()
     mailbox.send_all_draft()

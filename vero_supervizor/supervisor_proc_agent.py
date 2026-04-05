@@ -3,6 +3,9 @@ import threading
 
 from vero_supervizor import ProcState
 from vero_chat_agent import MessageDraft, MailDraft, WeChatDraft
+from utils import VERO_SUPERVISOR_LOG_DIR, get_logger
+
+logger = get_logger(__name__, VERO_SUPERVISOR_LOG_DIR, log_filename="supervisor_proc_agent.log")
 
 
 class ProcessAgentActions:
@@ -27,11 +30,11 @@ class ProcessAgentActions:
         res = []
         if self.custom_actions is None: return res
         for action in self.custom_actions.get(task, []):
-            print(f"Executing {task} action: {action['name']} - {action['description']}")
+            logger.info("Executing %s action: %s - %s", task, action["name"], action["description"])
             try:
                 res.append(action["func"](self.agent))
             except Exception as e:
-                print(f"Error occurred while executing {task} action: {e}")
+                logger.error("Error occurred while executing %s action: %s", task, e)
         return res
 
     def init_action(self, agent) -> list:
@@ -43,12 +46,16 @@ class ProcessAgentActions:
     
     def response_action(self):
         """在询问时执行的操作
+
+        TODO: 可以在这里添加一些默认的询问操作，比如生成当前进程状态的摘要、分析当前监控数据等
         """
         res = self.run_custom_action("response")
         return res
 
     def regular_action(self):
         """定期执行的操作
+
+        TODO: 可以在这里添加一些默认的定期操作，比如检查进程状态、收集监控数据等
         """
         res = self.run_custom_action("regular")
         return res

@@ -7,3 +7,5 @@
 
 vero_auto_sign/cfgs/*
 !vero_auto_sign/cfgs/template.cfg
+
+**/logs/**/*.log

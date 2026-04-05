@@ -8,7 +8,11 @@ from email.mime.image import MIMEImage
 from email.header import decode_header
 from tqdm import tqdm
 
+from utils import get_logger
+from utils.misc import VERO_EMAIL_LOG_DIR
 from vero_chat_agent import MessageTransceiver, MessageDraft
+
+logger = get_logger(__name__, VERO_EMAIL_LOG_DIR, log_filename="vero_email.log")
 
 
 class MailDraft(MessageDraft):
@@ -51,10 +55,9 @@ class MailDraft(MessageDraft):
 
         try:
             smtpObj.sendmail(self.sender, self.receivers, message.as_string())
-            print('\n==================================\n'
-                  'message is sent successfully!')
+            logger.info("message is sent successfully!")
         except smtplib.SMTPException as e:
-            print('Error: ', e)
+            logger.error("sendmail failed: %s", e)
 
     def add_file(self, newFileLst):
         self.attachments.extend(newFileLst)
@@ -153,7 +156,7 @@ class MailBox(MessageTransceiver):
                 self.smtpObj.connect(host, 25)
             self.smtpObj.login(username, pwd)
         except smtplib.SMTPException as e:
-            print('Error: ', e)
+            logger.error("SMTP login/connect failed: %s", e)
 
         # 收件箱
         imap_port = 993
@@ -172,9 +175,9 @@ class MailBox(MessageTransceiver):
     #     return -1
 
     def list_draft(self):
-        print("Drafts:")
+        logger.info("Drafts:")
         for i in self.draftLst:
-            print(" - ", i.title)
+            logger.info(" - %s", i.title)
 
     # def send_draft(self, title):
     #     idx = self._find_draft_title(title)
@@ -238,9 +241,9 @@ class MailBox(MessageTransceiver):
                 self.unreadMailIDLst.append(emailObj)
 
     def list_email(self):
-        print("Emails:")
+        logger.info("Emails:")
         for i in self.emailLst:
-            print(" - ", i.title)
+            logger.info(" - %s", i.title)
 
     def logout(self):
         self.smtpObj.quit()

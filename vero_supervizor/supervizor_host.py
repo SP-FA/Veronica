@@ -3,6 +3,9 @@ import json
 import threading
 
 from vero_supervizor import ReportCondition, TaskType, ProcessAgent, ProcessAgentActions
+from utils import VERO_SUPERVISOR_LOG_DIR, get_logger
+
+logger = get_logger(__name__, VERO_SUPERVISOR_LOG_DIR, log_filename="supervisor_host.log")
 
 
 class SupervisorHost:
@@ -51,7 +54,7 @@ class SupervisorHost:
             s.bind((self.host, self.port))
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.listen()
-            print(f"Listening on {self.host}:{self.port}")
+            logger.info("Listening on %s:%s", self.host, self.port)
 
             while True:
                 conn, addr = s.accept()
@@ -65,7 +68,7 @@ class SupervisorHost:
                 t.start()
     
     def _handle_client(self,conn, addr):
-        print("Connected:", addr)
+        logger.info("Connected: %s", addr)
         buffer = b''
         try:
             while True:
@@ -83,14 +86,14 @@ class SupervisorHost:
                     buffer = buffer[4+length:]
                     try:
                         decoded = json.loads(msg.decode('utf-8'))
-                        print(f"[{addr}] Received:", decoded)
+                        logger.info("[%s] Received: %s", addr, decoded)
                         self.handle_msg(decoded)
 
                     except Exception as e:
-                        print("Decode error:", e)
+                        logger.error("Decode error: %s", e)
         finally:
             conn.close()
-            print("Disconnected:", addr)
+            logger.info("Disconnected: %s", addr)
 
     def handle_msg(self, msg: dict):
         """处理客户端发送的消息
@@ -114,13 +117,13 @@ class SupervisorHost:
                 return
             agent = self.processes.get(proc_name)
         if not agent:
-            print("Unknown process:", proc_name)
+            logger.error("Unknown process: %s", proc_name)
             return
         
         draft = None
         if   task == TaskType.UPDATE: draft = agent.update(msg.get("data", {}))
         elif task == TaskType.FINISH: draft = agent.finish()
-        else: print("Unknown task:", task)
+        else: logger.error("Unknown task: %s", task)
         
         if draft is None: return
         with self.transceiver_lock:
