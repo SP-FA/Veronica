@@ -3,13 +3,13 @@ import sys
 
 from utils.configure_util import CfgLoader
 from vero_supervizor import ProcessAgentActions, SupervisorHost
+from utils import REPO_ROOT, VERO_EMAIL_CFG_PATH, VERO_WECHAT_CFG_PATH
 
 
 if __name__ == "__main__":
-    rootPath = sys.path[0]
-    cfg = CfgLoader(os.path.join(rootPath, "cfg.yaml"))
+    cfg = CfgLoader(os.path.join(REPO_ROOT, "cfg.yaml"))
 
-    email_cfg = CfgLoader(os.path.join(rootPath, "vero_chat_agent/configs/vero_email.yaml")).params
+    email_cfg = CfgLoader(VERO_EMAIL_CFG_PATH).params
     email_cfg = {
         "type": "email",
         "receivers": email_cfg["receivers"],
@@ -21,7 +21,7 @@ if __name__ == "__main__":
         }
     }
 
-    wechat_cfg = CfgLoader(os.path.join(rootPath, "vero_chat_agent/configs/vero_wechat.yaml")).params
+    wechat_cfg = CfgLoader(VERO_WECHAT_CFG_PATH).params
     wechat_cfg = {
         "type": "wechat",
         "receivers": [wechat_cfg["wechat_default_receiver"]],

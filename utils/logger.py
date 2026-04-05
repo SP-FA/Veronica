@@ -10,6 +10,33 @@ DEFAULT_BACKUP_COUNT = 1
 DEFAULT_FORMAT = "%(asctime)s | %(levelname)s | %(name)s | %(message)s"
 
 
+class MultilineAlignFormatter(logging.Formatter):
+    """多行日志时，续行左侧补空格，与首行消息正文对齐。
+
+    假定格式串里 ``%(message)s`` 在最后（与 ``DEFAULT_FORMAT`` 一致），否则前缀长度推断可能不准。
+    """
+
+    def formatMessage(self, record: logging.LogRecord) -> str:
+        # ``Formatter.format`` 已先执行 ``record.message = record.getMessage()``，
+        # ``%(message)s`` 读的是 ``record.message``，不能只改 ``record.msg``。
+        orig_message = record.message
+        try:
+            lines = orig_message.splitlines()
+            if len(lines) <= 1:
+                return super().formatMessage(record)
+
+            record.message = lines[0]
+            first = super().formatMessage(record)
+            prefix_len = len(first) - len(lines[0])
+            if prefix_len < 0:
+                prefix_len = 0
+            indent = " " * prefix_len
+            continuation = "\n".join(indent + line for line in lines[1:])
+            return f"{first}\n{continuation}"
+        finally:
+            record.message = orig_message
+
+
 def get_logger(
     name: str,
     log_dir: PathLike,
@@ -46,7 +73,7 @@ def get_logger(
     log_dir.mkdir(parents=True, exist_ok=True)
     log_path = log_dir / log_filename
 
-    formatter = logging.Formatter(fmt or DEFAULT_FORMAT)
+    formatter = MultilineAlignFormatter(fmt or DEFAULT_FORMAT)
 
     file_handler = RotatingFileHandler(
         log_path,

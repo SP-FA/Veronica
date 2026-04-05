@@ -8,8 +8,7 @@ from email.mime.image import MIMEImage
 from email.header import decode_header
 from tqdm import tqdm
 
-from utils import get_logger
-from utils.misc import VERO_EMAIL_LOG_DIR
+from utils import get_logger, VERO_EMAIL_LOG_DIR
 from vero_chat_agent import MessageTransceiver, MessageDraft
 
 logger = get_logger(__name__, VERO_EMAIL_LOG_DIR, log_filename="vero_email.log")
@@ -110,7 +109,7 @@ class MailDraft(MessageDraft):
         title  = self.text_visual(f"Subject: {self.title}")
         sender = self.text_visual(f"Sender : {self.sender}")
         r = self.text_visual(f"Receivers :")
-        receivers = self.text_visual(self.receivers)
+        receivers = self.text_visual(self.receivers, prefix="  * ")
         content = self.text_visual(self.msg)
         return (
             f"=============================Draft=============================\n"
@@ -215,7 +214,7 @@ class MailBox(MessageTransceiver):
                 sender = emailMsg["From"]
                 sender = decode_header(sender)[0][0]
                 sender = self._byte2str(sender)
-                title = emailMsg["Subject"]
+                title = emailMsg["Subject"] or "No Subject"
                 title = decode_header(title)[0][0]
                 title = self._byte2str(title)
 
