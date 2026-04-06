@@ -4,11 +4,70 @@ import threading
 import queue
 import time
 
-from utils import VERO_SUPERVISOR_LOG_DIR
-from utils.logger import get_logger
+from utils import VERO_SUPERVISOR_LOG_DIR, get_logger
+from vero_supervizor import TaskType, ReportCondition
 
 
-logger = get_logger(__name__, VERO_SUPERVISOR_LOG_DIR, log_filename="supervisor_client.py")
+logger = get_logger(__name__, VERO_SUPERVISOR_LOG_DIR, log_filename="supervisor_client.log")
+
+
+class SupervisorDataFactory:
+    _factory_obj = None
+
+    def __new__(cls, *args, **kwargs):
+        if cls._factory_obj is None:
+            obj = super().__new__(cls)
+            obj.proc_lst = []
+            cls._instance = obj
+        return cls._factory_obj
+
+    def register(
+        self, 
+        proc_name, 
+        data, 
+        response: bool=False, 
+        regular: bool=False, 
+        update: bool=False, 
+        finish: bool=False
+    ):
+        if proc_name in self.proc_lst:
+            logger.warning(f"{proc_name} has already been used")
+        else:
+            self.proc_lst.append(proc_name)
+
+        condition = {
+            "response": response,
+            "regular": regular,
+            "update": update,
+            "finish": finish,
+        }
+        return {
+            "task": TaskType.REGISTER,
+            "proc_name": proc_name,
+            "report_condition": ReportCondition(condition),
+            "data": data,
+        }
+    
+    def update(self, proc_name, data):
+        if proc_name not in self.proc_lst:
+            logger.warning(f"{proc_name} has not been registered yet")
+            return self.register(proc_name, data)
+
+        return {
+            "task": TaskType.UPDATE,
+            "proc_name": proc_name,
+            "data": data,
+        }
+
+    def finish(self, proc_name):
+        if proc_name not in self.proc_lst:
+            logger.warning(f"{proc_name} has not been registered yet")
+            return None
+        
+        return {
+            "task": TaskType.FINISH,
+            "proc_name": proc_name,
+        }
 
 
 class SupervisorClient:
@@ -62,4 +121,3 @@ class SupervisorClient:
         self.running = False
         if self.sock:
             self.sock.close()
-        logger.info("Supervisor client closed")

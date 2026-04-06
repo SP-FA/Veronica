@@ -112,6 +112,7 @@ class SupervisorHost:
                 "data": {...}
             }
         """
+        if msg is None: return
         task = msg.get("task", "unknown")  # 任务标识
         proc_name = msg.get("proc_name", "unknown")
 
