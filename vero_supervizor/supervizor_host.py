@@ -34,6 +34,7 @@ class SupervisorHost:
         self.actions = actions
         self.message_cfg = message_cfg
         self.running = True
+        self.server_socket = None
 
         self.processes_lock = threading.Lock()
         self.transceiver_lock = threading.Lock()
@@ -52,13 +53,20 @@ class SupervisorHost:
         """启动主机，监听端口并处理客户端连接
         """
         with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
-            s.bind((self.host, self.port))
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+            s.bind((self.host, self.port))
             s.listen()
+            self.server_socket = s
             logger.info("Supervisor host listening on %s:%s", self.host, self.port)
 
             while self.running:
-                conn, addr = s.accept()
+                try:
+                    conn, addr = s.accept()
+                except OSError:
+                    # close() will close the listening socket to break blocking accept().
+                    if not self.running: break
+                    logger.exception("Supervisor host accept failed")
+                    continue
 
                 # 每个客户端一个线程
                 t = threading.Thread(
@@ -67,6 +75,7 @@ class SupervisorHost:
                     daemon=True
                 )
                 t.start()
+            self.server_socket = None
     
     def _handle_client(self,conn, addr):
         logger.info("Connected: %s", addr)
@@ -99,6 +108,12 @@ class SupervisorHost:
     def close(self):
         """停止主机监听和处理客户端"""
         self.running = False
+        server_socket = getattr(self, "server_socket", None)
+        if server_socket:
+            try:
+                server_socket.close()
+            except OSError:
+                logger.exception("Error closing supervisor host socket")
         logger.info("Supervisor host closed")
 
     def handle_msg(self, msg: dict):
@@ -118,9 +133,10 @@ class SupervisorHost:
 
         with self.processes_lock:
             if task == TaskType.REGISTER:
-                report_condition = msg.get("report_condition", ReportCondition({}))
+                condition = msg.get("report_condition", {})
+                condition = ReportCondition(condition)
                 actions = msg.get("actions") or ProcessAgentActions(self.actions.custom_actions)
-                self.processes[proc_name] = ProcessAgent(proc_name, report_condition, actions, self.message_cfg)
+                self.processes[proc_name] = ProcessAgent(proc_name, condition, actions, self.message_cfg)
                 return
             agent = self.processes.get(proc_name)
         if not agent:

@@ -5,12 +5,15 @@ sys.path.insert(0, str(_repo_root))
 
 import json
 import queue
+import socket
 import threading
+import time
 import unittest
 from unittest.mock import MagicMock, patch
 
 from vero_supervizor.supervisor_client import SupervisorClient, SupervisorDataFactory
-from vero_supervizor.supervisor_enum import TaskType, ReportCondition
+from vero_supervizor.supervisor_enum import TaskType, ReportCondition, ProcState
+from vero_supervizor.supervisor_proc_agent import ProcessAgent, ProcessAgentActions
 from vero_supervizor.supervizor_host import SupervisorHost
 
 
@@ -35,11 +38,15 @@ class TestSupervisorDataFactory(unittest.TestCase):
         self.assertEqual(payload["task"], TaskType.REGISTER)
         self.assertEqual(payload["proc_name"], "proc-1")
         self.assertEqual(payload["data"], {"k": "v"})
-        self.assertIsInstance(payload["report_condition"], ReportCondition)
-        self.assertTrue(payload["report_condition"].RESPONSE)
-        self.assertFalse(payload["report_condition"].REGULAR)
-        self.assertTrue(payload["report_condition"].UPDATE)
-        self.assertTrue(payload["report_condition"].FINISH)
+        self.assertEqual(
+            payload["report_condition"],
+            {
+                "response": True,
+                "regular": False,
+                "update": True,
+                "finish": True,
+            },
+        )
         self.assertIn("proc-1", factory.proc_lst)
 
     @patch("vero_supervizor.supervisor_client.logger.warning")
@@ -199,6 +206,21 @@ class TestSupervisorClient(unittest.TestCase):
 
 
 class TestSupervisorHost(unittest.TestCase):
+    @staticmethod
+    def _get_free_port():
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as s:
+            s.bind(("127.0.0.1", 0))
+            return s.getsockname()[1]
+
+    @staticmethod
+    def _wait_for(predicate, timeout=2.0, interval=0.02):
+        end = time.time() + timeout
+        while time.time() < end:
+            if predicate():
+                return True
+            time.sleep(interval)
+        return False
+
     @patch("vero_supervizor.supervizor_host.threading.Thread")
     @patch("vero_chat_agent.MailBox")
     def test_init_email_creates_mailbox_and_listener_thread(self, mock_mailbox, mock_thread):
@@ -264,6 +286,28 @@ class TestSupervisorHost(unittest.TestCase):
             daemon=True,
         )
         fake_thread.start.assert_called_once()
+
+    @patch("vero_supervizor.supervizor_host.socket.socket")
+    def test_start_listen_breaks_when_accept_fails_after_close(self, mock_socket_cls):
+        host = SupervisorHost.__new__(SupervisorHost)
+        host.host = "0.0.0.0"
+        host.port = 5000
+        host.running = True
+        host.server_socket = None
+
+        fake_server_socket = MagicMock()
+        fake_server_socket.__enter__.return_value = fake_server_socket
+
+        def accept_raises_after_stop():
+            host.running = False
+            raise OSError("socket closed")
+
+        fake_server_socket.accept.side_effect = accept_raises_after_stop
+        mock_socket_cls.return_value = fake_server_socket
+
+        host.start_listen()
+
+        self.assertIsNone(host.server_socket)
 
     def test_handle_client_parses_framed_messages(self):
         host = SupervisorHost.__new__(SupervisorHost)
@@ -382,10 +426,110 @@ class TestSupervisorHost(unittest.TestCase):
     def test_close_marks_host_not_running(self):
         host = SupervisorHost.__new__(SupervisorHost)
         host.running = True
+        host.server_socket = MagicMock()
 
         host.close()
 
         self.assertFalse(host.running)
+        host.server_socket.close.assert_called_once()
+
+    @patch("vero_chat_agent.WeChat")
+    def test_e2e_client_host_register_update_finish(self, mock_wechat_cls):
+        port = self._get_free_port()
+        transceiver = MagicMock()
+        mock_wechat_cls.return_value = transceiver
+
+        actions = ProcessAgentActions()
+        host = SupervisorHost(
+            port=port,
+            actions=actions,
+            message_cfg={"type": "wechat", "receivers": ["wxid_1"]},
+        )
+        client = SupervisorClient(host="127.0.0.1", port=port)
+        factory = SupervisorDataFactory()
+        factory.proc_lst = []
+        proc_name = "e2e-proc"
+
+        try:
+            client.send(factory.register(proc_name, {"step": 0}, update=True, finish=True))
+            client.send(factory.update(proc_name, {"step": 1, "status": "running"}))
+            client.send(factory.finish(proc_name))
+
+            ok = self._wait_for(lambda: transceiver.send.call_count >= 2, timeout=3.0)
+            self.assertTrue(ok, "host did not send expected update/finish drafts in time")
+
+            with host.processes_lock:
+                self.assertIn(proc_name, host.processes)
+                self.assertEqual(host.processes[proc_name].state, ProcState.PROC_FINISH)
+        finally:
+            client.close()
+            host.close()
+
+
+class TestProcessAgent(unittest.TestCase):
+    def _build_agent(self, report_condition: dict):
+        actions = ProcessAgentActions()
+        agent = ProcessAgent(
+            "proc-a",
+            ReportCondition(report_condition),
+            actions,
+            {"type": "wechat", "receivers": ["wxid_1"]},
+        )
+        agent.create_draft = MagicMock(return_value="draft")
+        return agent
+
+    def test_update_generates_draft_when_update_enabled(self):
+        agent = self._build_agent({"update": True})
+
+        draft = agent.update({"step": 1, "status": "running"})
+
+        self.assertEqual(draft, "draft")
+        self.assertEqual(agent.latest_data, {"step": 1, "status": "running"})
+        agent.create_draft.assert_called_once()
+
+    def test_update_returns_none_after_finish(self):
+        agent = self._build_agent({"update": True, "finish": False})
+        agent.finish()
+
+        draft = agent.update({"step": 2})
+
+        self.assertIsNone(draft)
+        self.assertIsNone(agent.latest_data)
+        self.assertEqual(agent.state, ProcState.PROC_FINISH)
+
+    def test_response_and_regular_follow_report_condition(self):
+        agent = self._build_agent({"response": False, "regular": False})
+
+        self.assertIsNone(agent.response())
+        self.assertIsNone(agent.regular())
+
+    def test_finish_generates_draft_and_switches_state(self):
+        agent = self._build_agent({"update": True, "finish": True})
+        agent.update({"progress": 100})
+
+        draft = agent.finish()
+
+        self.assertEqual(draft, "draft")
+        self.assertEqual(agent.state, ProcState.PROC_FINISH)
+        self.assertGreaterEqual(agent.create_draft.call_count, 2)
+
+
+class TestProcessAgentActions(unittest.TestCase):
+    @patch("vero_supervizor.supervisor_proc_agent.logger.error")
+    def test_run_custom_action_keeps_running_when_single_action_fails(self, mock_error):
+        actions = ProcessAgentActions(
+            {
+                "update": [
+                    {"name": "bad", "description": "raise", "func": lambda _agent: (_ for _ in ()).throw(RuntimeError("x"))},
+                    {"name": "good", "description": "ok", "func": lambda _agent: "ok"},
+                ]
+            }
+        )
+
+        result = actions.run_custom_action("update")
+
+        self.assertEqual(result, ["ok"])
+        mock_error.assert_called_once()
 
 
 if __name__ == "__main__":

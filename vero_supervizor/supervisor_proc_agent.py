@@ -118,12 +118,13 @@ class ProcessAgent:
     def latest_data(self):
         """返回最新的监控数据
         """
-        if not self._datas: return None
+        if not self._datas or not len(self._datas): return None
         return self._datas[-1]
     
     def create_draft(self, title="", msg="") -> MessageDraft:
         """根据 message_type 创建对应类型的 MessageDraft
         """
+        draft = None
         if self.draft_cfg["type"] == "email":
             draft = MailDraft(title, self.draft_cfg["sender"], self.draft_cfg["receivers"], msg)
         elif self.draft_cfg["type"] == "wechat":

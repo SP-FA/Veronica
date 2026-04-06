@@ -1,5 +1,5 @@
 from typing import Dict
-from enum import IntEnum
+from enum import IntEnum, StrEnum
 
 
 class ReportCondition:
@@ -18,7 +18,7 @@ class ReportCondition:
         self.FINISH = condition.get("finish", condition.get("FINISH", False))
 
 
-class TaskType:
+class TaskType(StrEnum):
     REGISTER = "register"
     UPDATE = "update"
     FINISH = "finish"

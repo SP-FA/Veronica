@@ -5,7 +5,7 @@ import queue
 import time
 
 from utils import VERO_SUPERVISOR_LOG_DIR, get_logger
-from vero_supervizor import TaskType, ReportCondition
+from vero_supervizor import TaskType
 
 
 logger = get_logger(__name__, VERO_SUPERVISOR_LOG_DIR, log_filename="supervisor_client.log")
@@ -42,9 +42,9 @@ class SupervisorDataFactory:
             "finish": finish,
         }
         return {
-            "task": TaskType.REGISTER,
+            "task": TaskType.REGISTER.value,
             "proc_name": proc_name,
-            "report_condition": ReportCondition(condition),
+            "report_condition": condition,
             "data": data,
         }
     
@@ -54,7 +54,7 @@ class SupervisorDataFactory:
             return self.register(proc_name, data)
 
         return {
-            "task": TaskType.UPDATE,
+            "task": TaskType.UPDATE.value,
             "proc_name": proc_name,
             "data": data,
         }
@@ -65,7 +65,7 @@ class SupervisorDataFactory:
             return None
         
         return {
-            "task": TaskType.FINISH,
+            "task": TaskType.FINISH.value,
             "proc_name": proc_name,
         }
 
