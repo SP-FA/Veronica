@@ -18,7 +18,7 @@ class SupervisorDataFactory:
         if cls._factory_obj is None:
             obj = super().__new__(cls)
             obj.proc_lst = []
-            cls._instance = obj
+            cls._factory_obj = obj
         return cls._factory_obj
 
     def register(

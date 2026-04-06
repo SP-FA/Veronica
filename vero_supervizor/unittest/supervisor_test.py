@@ -9,9 +9,97 @@ import threading
 import unittest
 from unittest.mock import MagicMock, patch
 
-from vero_supervizor.supervisor_client import SupervisorClient
-from vero_supervizor.supervisor_enum import TaskType
+from vero_supervizor.supervisor_client import SupervisorClient, SupervisorDataFactory
+from vero_supervizor.supervisor_enum import TaskType, ReportCondition
 from vero_supervizor.supervizor_host import SupervisorHost
+
+
+class TestSupervisorDataFactory(unittest.TestCase):
+    def setUp(self):
+        SupervisorDataFactory._factory_obj = None
+
+    def test_singleton_and_register_payload(self):
+        factory = SupervisorDataFactory()
+        same_factory = SupervisorDataFactory()
+
+        payload = factory.register(
+            "proc-1",
+            {"k": "v"},
+            response=True,
+            regular=False,
+            update=True,
+            finish=True,
+        )
+
+        self.assertIs(factory, same_factory)
+        self.assertEqual(payload["task"], TaskType.REGISTER)
+        self.assertEqual(payload["proc_name"], "proc-1")
+        self.assertEqual(payload["data"], {"k": "v"})
+        self.assertIsInstance(payload["report_condition"], ReportCondition)
+        self.assertTrue(payload["report_condition"].RESPONSE)
+        self.assertFalse(payload["report_condition"].REGULAR)
+        self.assertTrue(payload["report_condition"].UPDATE)
+        self.assertTrue(payload["report_condition"].FINISH)
+        self.assertIn("proc-1", factory.proc_lst)
+
+    @patch("vero_supervizor.supervisor_client.logger.warning")
+    def test_register_duplicate_process_logs_warning(self, mock_warning):
+        factory = SupervisorDataFactory()
+        factory.register("proc-dup", {"x": 1})
+        factory.register("proc-dup", {"x": 2})
+
+        self.assertEqual(factory.proc_lst.count("proc-dup"), 1)
+        mock_warning.assert_called_once()
+
+    def test_update_registered_process(self):
+        factory = SupervisorDataFactory()
+        factory.register("proc-updated", {"init": True})
+
+        payload = factory.update("proc-updated", {"step": 2})
+
+        self.assertEqual(
+            payload,
+            {
+                "task": TaskType.UPDATE,
+                "proc_name": "proc-updated",
+                "data": {"step": 2},
+            },
+        )
+
+    @patch("vero_supervizor.supervisor_client.logger.warning")
+    def test_update_unregistered_process_falls_back_to_register(self, mock_warning):
+        factory = SupervisorDataFactory()
+
+        payload = factory.update("new-proc", {"step": 1})
+
+        self.assertEqual(payload["task"], TaskType.REGISTER)
+        self.assertEqual(payload["proc_name"], "new-proc")
+        self.assertEqual(payload["data"], {"step": 1})
+        self.assertIn("new-proc", factory.proc_lst)
+        mock_warning.assert_called_once()
+
+    def test_finish_registered_process(self):
+        factory = SupervisorDataFactory()
+        factory.register("proc-finish", {"init": True})
+
+        payload = factory.finish("proc-finish")
+
+        self.assertEqual(
+            payload,
+            {
+                "task": TaskType.FINISH,
+                "proc_name": "proc-finish",
+            },
+        )
+
+    @patch("vero_supervizor.supervisor_client.logger.warning")
+    def test_finish_unregistered_process_returns_none(self, mock_warning):
+        factory = SupervisorDataFactory()
+
+        payload = factory.finish("missing-proc")
+
+        self.assertIsNone(payload)
+        mock_warning.assert_called_once()
 
 
 class TestSupervisorClient(unittest.TestCase):
