@@ -33,6 +33,7 @@ class SupervisorHost:
         self.processes = {}  # 监控的进程列表，key 为进程名称，value 为进程
         self.actions = actions
         self.message_cfg = message_cfg
+        self.running = True
 
         self.processes_lock = threading.Lock()
         self.transceiver_lock = threading.Lock()
@@ -54,9 +55,9 @@ class SupervisorHost:
             s.bind((self.host, self.port))
             s.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
             s.listen()
-            logger.info("Listening on %s:%s", self.host, self.port)
+            logger.info("Supervisor host listening on %s:%s", self.host, self.port)
 
-            while True:
+            while self.running:
                 conn, addr = s.accept()
 
                 # 每个客户端一个线程
@@ -71,7 +72,7 @@ class SupervisorHost:
         logger.info("Connected: %s", addr)
         buffer = b''
         try:
-            while True:
+            while self.running:
                 data = conn.recv(4096)
                 if not data: break
 
@@ -93,7 +94,12 @@ class SupervisorHost:
                         logger.error("Decode error: %s", e)
         finally:
             conn.close()
-            logger.info("Disconnected: %s", addr)
+            logger.info("Supervisor host disconnected: %s", addr)
+
+    def close(self):
+        """停止主机监听和处理客户端"""
+        self.running = False
+        logger.info("Supervisor host closed")
 
     def handle_msg(self, msg: dict):
         """处理客户端发送的消息
